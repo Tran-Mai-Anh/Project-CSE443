@@ -6,7 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Cosmetic.Data;
-using Shop.Models;
+using Cosmetic.Models;
+
 
 namespace Cosmetic.Controllers
 {
@@ -25,11 +26,11 @@ namespace Cosmetic.Controllers
         //    var categories = await _context.Category.ToListAsync();
         //    return View(categories);
         //}
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var categories = _context.Category
+            var categories = await _context.Category
                                     .OrderByDescending(c => c.CreateTime) 
-                                    .ToList();
+                                    .ToListAsync();
 
             return View(categories); 
         }
@@ -44,7 +45,7 @@ namespace Cosmetic.Controllers
             }
 
             var category = await _context.Category
-                .FirstOrDefaultAsync(m => m.ID == id);
+                .FirstOrDefaultAsync(m => m.Id == id);
             if (category == null)
             {
                 return NotFound();
@@ -98,16 +99,16 @@ namespace Cosmetic.Controllers
         // POST: Categories/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        private bool CategoryExists(int id)
+        private bool CategoryExists(long id)
         {
-            return _context.Category.Any(e => e.ID == id);
+            return _context.Category.Any(e => e.Id == id);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("ID,Name,Description,Status")] Category category)
         {
-            if (id != category.ID)
+            if (id != category.Id)
             {
                 return NotFound();
             }
@@ -123,7 +124,7 @@ namespace Cosmetic.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!CategoryExists(category.ID))
+                    if (!CategoryExists(category.Id))
                     {
                         return NotFound();
                     }

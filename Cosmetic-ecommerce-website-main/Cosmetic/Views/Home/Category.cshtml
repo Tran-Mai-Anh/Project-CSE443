@@ -1,7 +1,8 @@
-﻿@model IEnumerable<Shop.Models.Product>
+﻿@model IEnumerable<Cosmetic.Models.Product>
 @{
-    var categories = ViewBag.Categories as List<Shop.Models.Category>;
+    var categories = ViewBag.Categories as List<Cosmetic.Models.Category>;
     int? selectedCategoryId = ViewBag.SelectedCategoryId as int?;
+    var userEmail = Context.Session.GetString("UserEmail");
 }
 
 
@@ -50,48 +51,51 @@
                             <div class="col-sm-6 col-lg-4 col-xl-3">
                                 <div class="card card-product grid-2 bg-transparent border-0" data-animate="fadeInUp">
                                     <figure class="card-img-top position-relative mb-7 overflow-hidden">
-                                        <a href="@Url.Action("ProductDetail", "Home", new { id = product.ID })" class="hover-zoom-in d-block">
+                                        <a href="@Url.Action("ProductDetail", "Home", new { id = product.Id })" class="hover-zoom-in d-block">
                                             <img src="@Url.Content(product.Image)" class="img-fluid lazy-image w-100" alt="@product.Name" width="330" height="440">
                                         </a>
 
                                         <div class="position-absolute product-flash z-index-2">
-                                            @if (product.Status == "available")
+                                            @if (product.Discount > 0)
                                             {
-                                                <span class="badge badge-product-flash on-sale bg-primary">-25%</span>
+                                                <span class="badge badge-product-flash on-sale bg-primary">-@product.Discount%</span>
                                             }
                                         </div>
 
                                         <div class="position-absolute d-flex z-index-2 product-actions horizontal">
-                                            <a class="text-body-emphasis bg-body bg-dark-hover text-light-hover rounded-circle square product-action shadow-sm add_to_cart"
-                                               href="#" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Add To Cart">
-                                                <i class="icon fs-6 icon-shopping-bag-open-light fa-solid fa-cart-shopping"></i>
-                                            </a>
+                                            @if (!string.IsNullOrEmpty(userEmail))
+                                            {
+                                                <a class="text-body-emphasis bg-body bg-dark-hover text-light-hover rounded-circle square product-action shadow-sm add_to_cart"
+                                                   href="#" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Add To Cart">
+                                                    <i class="icon fs-6 icon-shopping-bag-open-light fa-solid fa-cart-shopping"></i>
+                                                </a>
+                                            }
+                                            else
+                                            {
+
+                                                <a class="cursor-pointer text-body-emphasis bg-body bg-dark-hover text-light-hover rounded-circle square product-action shadow-sm add_to_cart"
+                                                   data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Add To Cart" onclick="showLoginPopup('HomeIndex')">
+                                                    <i class="icon fs-6 icon-shopping-bag-open-light fa-solid fa-cart-shopping"></i>
+                                                </a>
+                                            }
                                             <a class="text-body-emphasis bg-body bg-dark-hover text-light-hover rounded-circle square product-action shadow-sm compare"
                                                data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Compare"
-                                               asp-controller="Home" asp-action="Compare" asp-route-productId="@product.ID">
+                                               asp-controller="Home" asp-action="Compare" asp-route-productId="@product.Id">
                                                 <i class="icon fs-6 icon-arrows-left-right-light fa-solid fa-arrow-right-arrow-left"></i>
                                             </a>
                                         </div>
                                     </figure>
                                     <div class="card-body text-center p-0">
                                         <span class="d-flex align-items-center price text-body-emphasis fw-bold justify-content-center mb-3 fs-6">
-                                            @if (product.Price.HasValue)
+                                            @if (product.Discount > 0)
                                             {
-                                                var originalPrice = product.Price.Value;
-                                                var discountPrice = originalPrice * 0.75m;
-
-                                                <del class="text-body fw-500 me-4 fs-13px">$@originalPrice.ToString("F2")</del>
-                                                <ins class="text-decoration-none">$@discountPrice.ToString("F2")</ins>
+                                                <del class="text-body fw-500 me-4 fs-13px">$@product..ToString("F2")</del>
                                             }
-                                            else
-                                            {
-                                                <del class="text-body fw-500 me-4 fs-13px">$0.00</del>
-                                                <ins class="text-decoration-none">$0.00</ins>
-                                            }
+                                            <ins class="text-decoration-none">$@((product.ProductVariants[0].Price * ((100 - product.Discount) / 100)).ToString("F2"))</ins>
                                         </span>
 
                                         <h4 class="product-title card-title text-primary-hover text-body-emphasis fs-15px fw-500 mb-3">
-                                            <a class="text-decoration-none text-reset" href="@Url.Action("ProductDetail", "Home", new { id = product.ID })">
+                                            <a class="text-decoration-none text-reset" asp-action="ProductDetail" asp-controller="Home" asp-route-id="@product.Id">
                                                 @product.Name
                                             </a>
                                         </h4>
@@ -138,8 +142,8 @@
                                 @foreach (var category in ViewBag.Categories)
                                 {
                                     <li class="nav-item">
-                                        <a href="@Url.Action("Category", "Home", new { categoryId = category.ID })"
-                                           class="text-reset position-relative d-block text-decoration-none text-body-emphasis-hover d-flex align-items-center text-uppercase fs-14px fw-semibold letter-spacing-5 @(selectedCategoryId == category.ID ? "active" : "")">
+                                        <a href="@Url.Action("Category", "Home", new { categoryId = category.Id })"
+                                           class="text-reset position-relative d-block text-decoration-none text-body-emphasis-hover d-flex align-items-center text-uppercase fs-14px fw-semibold letter-spacing-5 @(selectedCategoryId == category.Id ? "active" : "")">
                                             <span class="text-hover-underline">@category.Name</span>
                                         </a>
                                     </li>

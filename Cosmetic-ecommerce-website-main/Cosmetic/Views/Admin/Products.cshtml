@@ -1,4 +1,4 @@
-﻿@model IEnumerable<Shop.Models.Product>
+﻿@model IEnumerable<Cosmetic.Models.Product>
 
 @{
 	ViewData["Title"] = "Product Management";
@@ -63,7 +63,7 @@
 					<thead class="table-light">
 						<tr>
 							<th class="align-middle text-center" scope="col">
-								@Html.DisplayNameFor(model => model.ID)
+								@Html.DisplayNameFor(model => model.Id)
 							</th>
 							@* <th class="align-middle" scope="col"> *@
 							@* 	@Html.DisplayNameFor(model => model.ImageURL) *@
@@ -71,11 +71,11 @@
 							<th class="align-middle text-center" scope="col">
 								@Html.DisplayNameFor(model => model.Name)
 							</th>
+							@* <th class="align-middle" scope="col"> *@
+							@* 	@Html.DisplayNameFor(model => model.Price) *@
+							@* </th> *@
 							<th class="align-middle" scope="col">
-								@Html.DisplayNameFor(model => model.Price)
-							</th>
-							<th class="align-middle" scope="col">
-								@Html.DisplayNameFor(model => model.Status)
+								@Html.DisplayNameFor(model => model.IsAvailable)
 							</th>
 							<th class="align-middle text-center" scope="col">
 								@Html.DisplayNameFor(model => model.InStock)
@@ -89,7 +89,7 @@
 						@foreach (var item in Model)
 						{
 							<tr>
-								<td class="text-center">@Html.DisplayFor(modelItem => item.ID)</td>
+								<td class="text-center">@Html.DisplayFor(modelItem => item.Id)</td>
 								<td>
 									<div class="d-flex align-items-center flex-nowrap">
 										<a href="../shop/product-details-v1.html" title="Flowers cotton dress">
@@ -100,15 +100,15 @@
 										</a>
 									</div>
 								</td>
-								<td>@Html.DisplayFor(modelItem => item.Price)</td>
+								@* <td>@Html.DisplayFor(modelItem => item.Price)</td> *@
 								<td>
-									<span class="badge rounded-lg rounded-pill alert py-3 px-4 mb-0 alert-success border-0 text-capitalize fs-12">@Html.DisplayFor(modelItem => item.Status)</span>
+									<span class="badge rounded-lg rounded-pill alert py-3 px-4 mb-0 alert-success border-0 text-capitalize fs-12">@Html.DisplayFor(modelItem => item.IsAvailable)</span>
 								</td>
 								<td class="text-center">@Html.DisplayFor(modelItem => item.InStock)</td>
 								<td class="text-center">
 									<div class="d-flex flex-nowrap justify-content-center">
-										<a asp-action="Edit" asp-route-id="@item.ID" class="btn btn-primary py-4 px-5 btn-xs fs-13px me-4"><i class="far fa-pen me-2"></i> Edit</a>
-										<a asp-action="Delete" asp-route-id="@item.ID" class="btn btn-outline-primary btn-hover-bg-danger btn-hover-border-danger btn-hover-text-light py-4 px-5 fs-13px btn-xs me-4"><i class="far fa-trash me-2"></i> Delete</a>
+										<a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-primary py-4 px-5 btn-xs fs-13px me-4"><i class="far fa-pen me-2"></i> Edit</a>
+										<a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-primary btn-hover-bg-danger btn-hover-border-danger btn-hover-text-light py-4 px-5 fs-13px btn-xs me-4"><i class="far fa-trash me-2"></i> Delete</a>
 									</div>
 								</td>
 							</tr>

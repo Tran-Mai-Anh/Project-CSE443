@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Cosmetic.Data;
-using Shop.Models;
+using Cosmetic.Models;
 
 namespace Cosmetic.Controllers
 {
@@ -24,14 +24,14 @@ namespace Cosmetic.Controllers
         //{
         //    return View(await _context.Product.ToListAsync());
         //}
-       
+
         public IActionResult Index()
         {
             var products = _context.Product
-                                    .Include(p => p.Category)  
-                                    .OrderByDescending(p => p.CreateTime)  
+                                    .Include(p => p.Category)
+                                    .OrderByDescending(p => p.CreateTime)
                                     .ToList();
-       
+
             return View(products);
         }
 
@@ -47,7 +47,7 @@ namespace Cosmetic.Controllers
             }
 
             var product = await _context.Product
-                .FirstOrDefaultAsync(m => m.ID == id);
+                .FirstOrDefaultAsync(m => m.Id == id);
             if (product == null)
             {
                 return NotFound();
@@ -175,15 +175,15 @@ namespace Cosmetic.Controllers
             }
 
             var product = await _context.Product
-                .Include(p => p.Category)  
-                .FirstOrDefaultAsync(m => m.ID == id);
+                .Include(p => p.Category)
+                .FirstOrDefaultAsync(m => m.Id == id);
 
             if (product == null)
             {
                 return NotFound();
             }
 
-            ViewBag.Categories = new SelectList(await _context.Category.ToListAsync(), "ID", "Name", product.CategoryID);
+            ViewBag.Categories = new SelectList(await _context.Category.ToListAsync(), "ID", "Name", product.CategoryId);
 
             return View(product);
         }
@@ -232,17 +232,17 @@ namespace Cosmetic.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("ID,Name,Description,Price,InStock,Status,CategoryID,Image")] Product product, IFormFile? ImageFile)
         {
-            if (id != product.ID)
+            if (id != product.Id)
             {
                 return NotFound();
             }
 
-            ModelState.Remove("ImageFile"); 
+            ModelState.Remove("ImageFile");
 
             if (!ModelState.IsValid)
             {
                 TempData["Error"] = "Validation failed. Please check your inputs.";
-                ViewBag.Categories = new SelectList(await _context.Category.ToListAsync(), "ID", "Name", product.CategoryID);
+                ViewBag.Categories = new SelectList(await _context.Category.ToListAsync(), "ID", "Name", product.CategoryId);
                 return View(product);
             }
 
@@ -272,10 +272,10 @@ namespace Cosmetic.Controllers
 
                 existingProduct.Name = product.Name;
                 existingProduct.Description = product.Description;
-                existingProduct.Price = product.Price;
+                //existingProduct.Price = product.Price;
                 existingProduct.InStock = product.InStock;
-                existingProduct.Status = product.Status;
-                existingProduct.CategoryID = product.CategoryID;
+                existingProduct.IsAvailable = product.IsAvailable;
+                existingProduct.CategoryId = product.CategoryId;
 
                 _context.Update(existingProduct);
                 await _context.SaveChangesAsync();
@@ -285,7 +285,7 @@ namespace Cosmetic.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Product.Any(e => e.ID == product.ID))
+                if (!_context.Product.Any(e => e.Id == product.Id))
                 {
                     return NotFound();
                 }
@@ -371,7 +371,7 @@ namespace Cosmetic.Controllers
 
         private bool ProductExists(int id)
         {
-            return _context.Product.Any(e => e.ID == id);
+            return _context.Product.Any(e => e.Id == id);
         }
     }
 }

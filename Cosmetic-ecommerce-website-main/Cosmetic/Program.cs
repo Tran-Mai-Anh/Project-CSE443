@@ -1,14 +1,15 @@
 ﻿using Cosmetic.Data;
 using Microsoft.EntityFrameworkCore;
-using Shop.Models;
+using Cosmetic.Models;
+using Cosmetic.Enums;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Database configuration
-var connectionString = builder.Configuration.GetConnectionString("CosmeticContext");
-builder.Services.AddDbContext<CosmeticContext>(option =>
-    option.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
-);
+builder.Services.AddDbContext<CosmeticContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnectionString")));
+
+
 
 // Add services to the container
 builder.Services.AddControllersWithViews();
@@ -27,6 +28,8 @@ builder.Services.AddRazorPages();
 builder.Services.AddLogging();
 
 var app = builder.Build();
+
+
 
 // Use session
 app.UseSession();

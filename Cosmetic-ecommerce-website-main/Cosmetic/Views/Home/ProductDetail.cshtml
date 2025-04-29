@@ -1,64 +1,83 @@
-﻿@model Cosmetic.Controllers.HomeController.ProductDetailViewModel
-
+﻿@using Cosmetic.Models.ViewModels
+@model ProductDetailViewModel
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Product Detail";
+    var userEmail = Context.Session.GetString("UserEmail");
+    var product = Model.Product;
+    string size = Model.Size;
+    int quantity = Model.Quantity != 0 ? Model.Quantity : 1;
+    var productVariants = Model.Variants;
+    var relatedProduct = Model.ListProducts;
+    var originalPrice = (size != null ? productVariants.FirstOrDefault(pv => pv.Name == size).Price : productVariants[0].Price) * quantity;
+    var discount = product.Discount;
+    var discountPrice = originalPrice * ((100 - discount) / 100);
+
+
 }
 <main id="content" class="wrapper layout-page">
+    <div class="modal fade" id="loginRequiredModalHomeProductDetail" tabindex="-1" aria-labelledby="loginRequiredLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold" id="loginRequiredLabel">You have to login</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <p>You have to login to buy this product. Login now?</p>
+                </div>
+                <div class="modal-footer border-0 justify-content-center">
+                    <button type="button" class="btn btn-secondary px-4" style="width: 100px" data-bs-dismiss="modal">No</button>
+                    <button type="button" class="btn btn-primary px-4" style="width: 100px" onclick="notLoginInProductDetail()">Yes</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <section class="container pt-6 pb-13 pb-lg-20">
         <div class="row">
             <div class="col-md-6 pe-lg-13 pb-12">
                 <div class="position-sticky top-0">
                     <div class="slick-slider g-0" data-slick-options="{&#34;arrows&#34;:false,&#34;imageSize&#34;:{&#34;img&#34;:{&#34;height&#34;:720,&#34;width&#34;:540}},&#34;items&#34;:[{&#34;img&#34;:&#34;/assets/images/shop/product-gallery-05.jpg&#34;},{&#34;img&#34;:&#34;/assets/images/shop/product-gallery-06.jpg&#34;},{&#34;img&#34;:&#34;/assets/images/shop/product-gallery-07.jpg&#34;},{&#34;img&#34;:&#34;/assets/images/shop/product-gallery-08.jpg&#34;}],&#34;slidesToShow&#34;:1}">
-                        <a href="@Url.Content(Model.Product.Image)" data-gallery="gallery4">
-                            <img src="@Url.Content(Model.Product.Image)" class="lazy-image" width="540" height="720" />
+                        <a href="@Url.Content(product.Image)" data-gallery="gallery4">
+                            <img src="@Url.Content(product.Image)" class="lazy-image" width="540" height="720" />
                         </a>
                     </div>
                 </div>
             </div>
             <div class="col-md-6 pt-md-0 pt-10">
-                <p class="d-flex align-items-center mb-6">
-                    @if (Model.Product.Price.HasValue)
+                <p class="d-flex align-items-center justify-content-start mb-6">
+                    @if (discount != 0)
                     {
-                        var originalPrice = Model.Product.Price.Value;
-                        var discountPrice = originalPrice * 0.75m;
-
-                        <span class="text-decoration-line-through">$@originalPrice.ToString("F2")</span>
-                        <span class="fs-18px text-body-emphasis ps-6 fw-bold">$@discountPrice.ToString("F2")</span>
-                        <span class="badge text-bg-primary fs-6 fw-semibold ms-7 px-6 py-3">-25%</span>
+                        <span class="text-decoration-line-through" id="original-price">$@originalPrice.ToString("F2")</span>
+                        <span class="fs-18px text-body-emphasis ps-6 fw-bold" id="discount-price">$@discountPrice.ToString("F2")</span>
+                        <span class="badge text-bg-primary fs-6 fw-semibold ms-7 px-6 py-3">-@discount%</span>
                     }
                     else
                     {
-                        <span class="text-decoration-line-through">$0.00</span>
-                        <span class="fs-18px text-body-emphasis ps-6 fw-bold">$0.00</span>
-                        <span class="badge text-bg-primary fs-6 fw-semibold ms-7 px-6 py-3">N/A</span>
+                        <span class="fs-18px text-body-emphasis fw-bold" id="discount-price">$@discountPrice.ToString("F2")</span>
                     }
                 </p>
 
-                <h1 class="mb-4 pb-2 fs-4">@Model.Product.Name</h1>
+                <h1 class="mb-4 pb-2 fs-4">@product.Name</h1>
                 <form>
                     <div class="row align-items-end">
                         <div class="col-sm-6 form-group">
                             <label class="text-body-emphasis fw-semibold py-5" for="size">Select a size: </label>
-                            <select name="size" class="form-control w-100 product-info-2-quantity" id="size">
-                                <option value="50ml" selected>50ml</option>
-                                <option value="70ml">70ml</option>
-                                <option value="90ml">90ml</option>
-                                <option value="100ml">100ml</option>
+                            <select asp-for="Size" class="form-control w-100 product-info-2-quantity" id="size" onchange="updatePriceInProductDetail(@discount)">
+                                @for (int i = 0; i < productVariants.Count(); i++)
+                                {
+                                    <option value="@productVariants[i].Name" data-price="@productVariants[i].Price" selected="@( i == 0 ? string.IsNullOrEmpty(size) || size == productVariants[i].Name : size == productVariants[i].Name)">@productVariants[i].Name</option>
+                                }
                             </select>
                         </div>
                         <div class="col-sm-6 form-group">
                             <label class="text-body-emphasis fw-semibold py-5" for="quantity">Quantity: </label>
-                            <select name="quantity" class="form-control w-100 product-info-2-quantity" id="quantity">
-                                <option value="1" selected>1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                            </select>
+                            <input asp-for="Quantity" type="number" class="form-control" value="@quantity" min="1" max="999" id="quantity" oninput="updatePriceInProductDetail(@discount)" />
                         </div>
                         <div class="col-12">
-                            <button type="submit" class="btn btn-lg btn-dark btn-block mb-7 mt-8 w-100 btn-hover-bg-primary btn-hover-border-primary">
-                                Add To Bag
+                            <button type="button" class="btn btn-lg btn-dark btn-block mb-7 mt-8 w-100 btn-hover-bg-primary btn-hover-border-primary"
+                                    onclick="@(string.IsNullOrEmpty(userEmail) ? "showLoginPopup('HomeProductDetail')" : $"addToCart({product.Id})")">
+                                Add To Cart
                             </button>
                         </div>
                     </div>
@@ -66,14 +85,14 @@
                 <div class="d-flex align-items-center flex-wrap">
                     <a class="text-body-emphasis bg-body bg-dark-hover text-light-hover rounded-circle square product-action shadow-sm compare"
                        data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Compare"
-                       asp-controller="Home" asp-action="Compare" asp-route-productId="@Model.Product.ID">
+                       asp-controller="Home" asp-action="Compare" asp-route-productId="@product.Id">
                         <i class="icon fs-6 icon-arrows-left-right-light fa-solid fa-arrow-right-arrow-left"></i>
                     </a>
                 </div>
                 <ul class="single-product-meta list-unstyled border-top pt-7 mt-7">
                     <li class="d-flex mb-4 pb-2 align-items-center">
                         <span class="text-body-emphasis fw-semibold fs-14px">Categories:</span>
-                        <span class="ps-4">@Model.Product.Category.Name</span>
+                        <span class="ps-4">@product.Category.Name</span>
                     </li>
                 </ul>
                 <div class="mt-11">
@@ -94,7 +113,7 @@
                              aria-labelledby="flush-headingOne" data-bs-parent="#accordionFlushExample">
                             <div class="pt-8 pb-3">
                                 <p class="mb-2 pb-4">
-                                    @Model.Product.Description
+                                    @product.Description
                                 </p>
                             </div>
                         </div>
@@ -111,24 +130,29 @@
         </div>
         <div class="slick-slider"
              data-slick-options="{&#34;arrows&#34;:true,&#34;centerMode&#34;:true,&#34;centerPadding&#34;:&#34;calc((100% - 1440px) / 2)&#34;,&#34;dots&#34;:true,&#34;infinite&#34;:true,&#34;responsive&#34;:[{&#34;breakpoint&#34;:1200,&#34;settings&#34;:{&#34;arrows&#34;:false,&#34;dots&#34;:false,&#34;slidesToShow&#34;:3}},{&#34;breakpoint&#34;:992,&#34;settings&#34;:{&#34;arrows&#34;:false,&#34;dots&#34;:false,&#34;slidesToShow&#34;:2}},{&#34;breakpoint&#34;:576,&#34;settings&#34;:{&#34;arrows&#34;:false,&#34;dots&#34;:false,&#34;slidesToShow&#34;:1}}],&#34;slidesToShow&#34;:4}">
-            @foreach (var prod in Model.RelatedProducts)
+            @foreach (var prod in relatedProduct)
             {
                 <div class="mb-6">
                     <div class="card card-product grid-2 bg-transparent border-0">
                         <figure class="card-img-top position-relative mb-7 overflow-hidden">
-                            <a href="@Url.Action("ProductDetail", "Home", new { id = prod.ID })" class="hover-zoom-in d-block" title="@prod.Name">
+                            <a asp-controller="Home" asp-action="ProductDetail" asp-route-id="@prod.Id" class="hover-zoom-in d-block" title="@prod.Name">
                                 <img src="@Url.Content(prod.Image)" data-src="@Url.Content(prod.Image)"
                                      class="img-fluid lazy-image w-100" alt="@prod.Name" width="330" height="440">
                             </a>
+                            @if (prod.Discount > 0)
+                            {
+                                <div class="position-absolute product-flash z-index-2">
+                                    <span class="badge badge-product-flash on-sale bg-primary">-@prod.Discount%</span>
+                                </div>
+                            }
                             <div class="position-absolute d-flex z-index-2 product-actions vertical">
-
                                 <a class="text-body-emphasis bg-body bg-dark-hover text-light-hover rounded-circle square product-action shadow-sm compare"
                                    data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Compare"
-                                   asp-controller="Home" asp-action="Compare" asp-route-productId="@prod.ID">
+                                   asp-controller="Home" asp-action="Compare" asp-route-productId="@prod.Id">
                                     <i class="icon fs-6 icon-arrows-left-right-light fa-solid fa-arrow-right-arrow-left"></i>
                                 </a>
                             </div>
-                            <a href="@Url.Action("AddToCart", "Cart", new { id = prod.ID })"
+                            <a href="javascript:;" onclick="addToCart(@prod.Id)"
                                class="btn btn-add-to-cart btn-dark btn-hover-bg-primary btn-hover-border-primary position-absolute z-index-2 text-nowrap">
                                 Add To Cart
                             </a>
@@ -136,24 +160,16 @@
                         <div class="card-body text-center p-0">
                             <span class="d-flex align-items-center price text-body-emphasis fw-bold justify-content-center mb-3 fs-6">
                                 <span class="d-flex align-items-center price text-body-emphasis fw-bold justify-content-center mb-3 fs-6">
-                                    @if (prod.Price.HasValue)  
+                                    @if (discount != 0)
                                     {
-                                        var originalPrice = prod.Price.Value;  
-                                        var discountPrice = originalPrice * 0.75m;
-
-                                        <del class="text-body fw-500 me-4 fs-13px">$@originalPrice.ToString("F2")</del>
-                                        <ins class="text-decoration-none">$@discountPrice.ToString("F2")</ins>
+                                        <del class="text-body fw-500 me-4 fs-13px">$@prod.ProductVariants[0].Price.ToString("F2")</del>
                                     }
-                                    else
-                                    {
-                                        <del class="text-body fw-500 me-4 fs-13px">$0.00</del>
-                                        <ins class="text-decoration-none">$0.00</ins>
-                                    }
+                                    <ins class="text-decoration-none">$@prod.Discount.ToString("F2")</ins>
                                 </span>
 
                             </span>
                             <h4 class="product-title card-title text-primary-hover text-body-emphasis fs-15px fw-500 mb-3">
-                                <a class="text-decoration-none text-reset" href="@Url.Action("ProductDetail", "Home", new { id = prod.ID })">
+                                <a class="text-decoration-none text-reset" href="@Url.Action("ProductDetail", "Home", new { id = prod.Id })">
                                     @prod.Name
                                 </a>
                             </h4>
@@ -164,3 +180,5 @@
         </div>
     </section>
 </main>
+
+

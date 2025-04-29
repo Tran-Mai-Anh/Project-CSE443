@@ -18,7 +18,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
-using Shop.Models;
+using Cosmetic.Models;
 
 namespace Cosmetic.Areas.Identity.Pages.Account
 {

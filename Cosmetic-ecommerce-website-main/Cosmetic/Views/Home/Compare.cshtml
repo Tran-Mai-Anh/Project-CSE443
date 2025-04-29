@@ -1,10 +1,10 @@
 ﻿@{
-    var selectedProduct = ViewData["SelectedProduct"] as Shop.Models.Product;
-    var relatedProducts = ViewData["RelatedProducts"] as List<Shop.Models.Product>;
+    var selectedProduct = ViewData["SelectedProduct"] as Cosmetic.Models.Product;
+    var relatedProducts = ViewData["RelatedProducts"] as List<Cosmetic.Models.Product>;
 
     if (relatedProducts == null)
     {
-        relatedProducts = new List<Shop.Models.Product>();
+        relatedProducts = new List<Cosmetic.Models.Product>();
     }
 }
 
@@ -24,7 +24,7 @@
                             <p class="fs-18px text-center mt-4 mb-6 text-body-emphasis fw-semibold">
                                 @selectedProduct?.Name
                             </p>
-                            <a href="@Url.Action("ProductDetail", "Home", new { id = selectedProduct?.ID })" class="text-center d-block">
+                            <a href="@Url.Action("ProductDetail", "Home", new { id = selectedProduct?.Id })" class="text-center d-block">
                                 <img src="@Url.Content(selectedProduct?.Image)" class="lazy-image" alt="@selectedProduct?.Name" style="max-width: 210px" width="210" height="280">
                             </a>
                         </th>
@@ -35,7 +35,7 @@
                                 <p class="fs-18px text-center mt-4 mb-6 text-body-emphasis fw-semibold">
                                     @product.Name
                                 </p>
-                                <a href="@Url.Action("ProductDetail", "Home", new { id = product.ID })" class="text-center d-block">
+                                <a href="@Url.Action("ProductDetail", "Home", new { id = product.Id })" class="text-center d-block">
                                     <img src="@Url.Content(product.Image)" class="lazy-image" alt="@product.Name" style="max-width: 210px" width="210" height="280">
                                 </a>
                             </th>
@@ -50,10 +50,10 @@
                         </th>
                         <td scope="col" class="px-6 px-lg-9 align-middle">
                             <span class="fs-15px fw-500 text-decoration-line-through text-body">
-                                $@selectedProduct?.Price
+                                $@selectedProduct.ProductVariants[0].Price
                             </span>
                             <span class="pe-3 fs-18px font-weight-bold text-body-emphasis">
-                                $@((selectedProduct?.Price ?? 0m) * 0.75m)
+                                $@((selectedProduct.ProductVariants[0].Price) * 0.75)
                             </span>
                             <span class="badge bg-primary ms-4 fs-6">-25%</span>
                         </td>
@@ -61,10 +61,10 @@
                         {
                             <td scope="col" class="px-6 px-lg-9 align-middle">
                                 <span class="fs-15px fw-500 text-decoration-line-through text-body">
-                                    $@product?.Price
+                                    $@product.ProductVariants[0].Price
                                 </span>
                                 <span class="pe-3 fs-18px font-weight-bold text-body-emphasis">
-                                    $@((product?.Price ?? 0m) * 0.75m)
+                                    $@((product.ProductVariants[0].Price) * 0.75)
                                 </span>
                                 <span class="badge bg-primary ms-4 fs-6">-25%</span>
                             </td>

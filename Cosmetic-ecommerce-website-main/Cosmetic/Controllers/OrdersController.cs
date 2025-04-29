@@ -6,7 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Cosmetic.Data;
-using Shop.Models;
+using Cosmetic.Models;
+
 
 namespace Cosmetic.Controllers
 {
@@ -28,7 +29,7 @@ namespace Cosmetic.Controllers
         {
             var orders = _context.Order
                 .Include(o => o.Customer)  // Load dữ liệu từ bảng Customer
-                .OrderByDescending(o => o.Date)
+                .OrderByDescending(o => o.OrderDate)
                 .ToList();
 
             return View(orders);
@@ -46,7 +47,7 @@ namespace Cosmetic.Controllers
 
             var order = await _context.Order
                .Include(o => o.Customer)
-               .FirstOrDefaultAsync(m => m.ID == id);
+               .FirstOrDefaultAsync(m => m.Id == id);
             if (order == null)
             {
                 return NotFound();
@@ -100,7 +101,7 @@ namespace Cosmetic.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("ID,Name,Email,TotalPrice,Date,Status")] Order order)
         {
-            if (id != order.ID)
+            if (id != order.Id)
             {
                 return NotFound();
             }
@@ -114,7 +115,7 @@ namespace Cosmetic.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!OrderExists(order.ID))
+                    if (!OrderExists(order.Id))
                     {
                         return NotFound();
                     }
@@ -137,7 +138,7 @@ namespace Cosmetic.Controllers
             }
 
             var order = await _context.Order
-                .FirstOrDefaultAsync(m => m.ID == id);
+                .FirstOrDefaultAsync(m => m.Id == id);
             if (order == null)
             {
                 return NotFound();
@@ -161,9 +162,9 @@ namespace Cosmetic.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        private bool OrderExists(int id)
+        private bool OrderExists(long id)
         {
-            return _context.Order.Any(e => e.ID == id);
+            return _context.Order.Any(e => e.Id == id);
         }
     }
 }

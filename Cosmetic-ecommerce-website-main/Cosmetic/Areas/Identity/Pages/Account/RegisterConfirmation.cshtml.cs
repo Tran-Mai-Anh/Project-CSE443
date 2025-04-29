@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
-using Shop.Models;
+using Cosmetic.Models;
 
 namespace Cosmetic.Areas.Identity.Pages.Account
 {

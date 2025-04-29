@@ -4,11 +4,20 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Cosmetic.Data;
-using Shop.Models;
 using Microsoft.AspNetCore.Identity;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System;
+using Cosmetic.Models;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Http;
+using Cosmetic.Helper;
+using Cosmetic.Models.ViewModels;
+using Cosmetic.DTO.Cart;
+using Cosmetic.DTO.CartItem;
+using Cosmetic.DTO.Product;
+using Cosmetic.DTO.ProductVariant;
 
 namespace Cosmetic.Controllers
 {
@@ -17,165 +26,202 @@ namespace Cosmetic.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly CosmeticContext _context;
 
+        private readonly PasswordService passwordService = new PasswordService();
+
         public HomeController(ILogger<HomeController> logger, CosmeticContext context)
         {
             _logger = logger;
             _context = context;
         }
 
-        public IActionResult Index()
+
+        // Done
+        public async Task<IActionResult> Index()
         {
-            var categories = new List<string> { "Eyes", "Face", "Lips" };
+            List<string> categoryMenu = new List<string> { "Eyes", "Face", "Lips" };
 
-            var products = _context.Product
-                                   .Where(p => (p.Category != null && categories.Contains(p.Category.Name) && p.Status != "out of stock"))
-                                   .ToList();
+            List<Product> products = await _context.Product
+                                   .Where(eachProduct => (categoryMenu.Contains(eachProduct.Category.Name) && eachProduct.IsAvailable && eachProduct.ProductVariants.Any(productVariant => productVariant.InStock > 0)))
+                                   .Include(eachProduct => eachProduct.ProductVariants.Where(eachProductVariant => eachProductVariant.InStock > 0))
+                                   .ToListAsync();
 
-            var productsUnder50 = _context.Product
-                                          .Where(p => p.Price < 50 && p.Category != null && categories.Contains(p.Category.Name) && p.Status != "out of stock")
-                                          .ToList();
+            List<Product> productsHasPriceUnder50 = await _context.Product
+                                                                    .Where(eachProduct =>
+                                                                            categoryMenu.Contains(eachProduct.Category.Name) &&
+                                                                            eachProduct.IsAvailable &&
+                                                                            eachProduct.ProductVariants.Any(productVariant => productVariant.InStock > 0 && productVariant.Price <= 50)
+                                                                          )
+                                                                    .Include(eachProduct => eachProduct.ProductVariants.Where(eachProductVariant =>
+                                                                             eachProductVariant.InStock > 0 && eachProductVariant.Price <= 50
+                                                                            ))
+                                                    .ToListAsync();
 
-            Debug.WriteLine($"Total products returned (All): {products.Count}");
-            Debug.WriteLine($"Total products returned (Under $50): {productsUnder50.Count}");
-
-            var viewModel = new ProductViewModel
+            return View(new ProductIndexViewModel
             {
-                AllProducts = products,
-                ProductsUnder50 = productsUnder50
-            };
-
-            ViewBag.WelcomeMessage = TempData["Message"];
-            ViewBag.ErrorMessage = TempData["ErrorMessage"];
-
-            return View(viewModel);
+                products = products,
+                productsHasPriceUnder50 = productsHasPriceUnder50
+            });
         }
 
-
+        // Done
         public IActionResult Register() => View();
+
+        // Done
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(Customer model)
+        //[ValidateAntiForgeryToken]
+        public async Task<IActionResult> Register(RegisterViewModel registerViewModel)
         {
             if (ModelState.IsValid)
             {
+                var email = registerViewModel.Email;
+                var name = registerViewModel.Name;
+                var password = registerViewModel.Password;
+                var confirmPassword = registerViewModel.ConfirmPassword;
+                var DoB = registerViewModel.DoB;
+                var gender = registerViewModel.Gender;
+                var address = registerViewModel.Address;
+                var phoneNumber = registerViewModel.PhoneNumber;
                 var existingCustomer = await _context.Customer
-                                                     .FirstOrDefaultAsync(c => c.Email == model.Email);
+                                                     .FirstOrDefaultAsync(c => c.Email == email);
                 if (existingCustomer != null)
                 {
-                    TempData["ErrorMessage"] = "Email is already in use.";
-                    return RedirectToAction("Register");
+                    ModelState.AddModelError("", "Email is already in use");
+                    return View(registerViewModel);
                 }
 
-                model.Status = "active";
+                if (password != confirmPassword)
+                {
+                    ModelState.AddModelError("", "Password does not match");
+                    return View(registerViewModel);
+                }
 
-                _context.Customer.Add(model);
+                if (DateTime.Today <= DoB)
+                {
+                    ModelState.AddModelError("", "Invalid Date");
+                    return View(registerViewModel);
+                }
+                var encriptedPassword = passwordService.HashPassword(password);
+                User user = new User(email, encriptedPassword);
+                await _context.User.AddAsync(user);
+                await _context.SaveChangesAsync();
+                Rank rank = await _context.Rank.FirstOrDefaultAsync(eachRank => eachRank.Id == 1);
+                Customer customer = new Customer(name, email, encriptedPassword, address, phoneNumber, DoB, gender, user.Id, user, rank.Id, rank);
+                await _context.Customer.AddAsync(customer);
                 await _context.SaveChangesAsync();
 
-                TempData["Message"] = "Registration successful! You can now log in.";
+                Cart cart = new Cart(customer.Id, customer);
+                await _context.Cart.AddAsync(cart);
+                await _context.SaveChangesAsync();
 
-                return RedirectToAction("Login");
+                customer.Cart = cart;
+                TempData["RegisterSuccessMessage"] = "Registration successful! You can now log in.";
+
+                return RedirectToAction("Register");
             }
 
-            return View(model);
+            return View(registerViewModel);
         }
-        public IActionResult Login()
+
+        // Done
+        public IActionResult Login(string? returnURL)
         {
-            var userEmail = HttpContext.Session.GetString("UserEmail");
-
-            if (userEmail != null)
-            {
-                
-                TempData["Message"] = "You are already logged in.";
-            }
-
+            HttpContext.Session.Clear();
+            ViewBag.ReturnURL = returnURL;
+            Console.WriteLine(returnURL + " Hehehe");
             return View();
         }
 
+
+        // Done
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Login(string email, string password)
+        public IActionResult Login(LoginViewModel loginViewModel, string? returnURL)
         {
-            var customer = _context.Customer.FirstOrDefault(c => c.Email == email);
 
-            if (customer == null)
+            if (ModelState.IsValid)
             {
-                TempData["ErrorMessage"] = "Account does not exist. Please check your email and try again.";
-                return View(); 
+                var email = loginViewModel.Email;
+                var password = loginViewModel.Password;
+                User user = _context.User.FirstOrDefault(eachUser => eachUser.Email == email);
+                if (user == null)
+                {
+                    ModelState.AddModelError("", "Email does not exist");
+                    return View(loginViewModel);
+                }
+                bool isValid = passwordService.VerifyPassword(user.Password, password);
+                if (!isValid)
+                {
+                    ModelState.AddModelError("", "Password is not correct");
+                    return View(loginViewModel);
+                }
+
+                HttpContext.Session.SetString("UserEmail", email);
+                TempData["LoginSuccess"] = "Successful";
+                if (!string.IsNullOrEmpty(returnURL))
+                {
+                    return Redirect(returnURL);
+                }
+                return RedirectToAction("Index", "Home");
             }
 
-            if (customer.Password == password)
-            {
-                HttpContext.Session.SetString("UserEmail", customer.Email);
+            return View(loginViewModel);
 
-                TempData["Message"] = $"Hello, {customer.Email}";
-
-                return RedirectToAction("Index"); 
-            }
-            else
-            {
-                TempData["ErrorMessage"] = "Invalid credentials. Please try again.";
-                return View(); 
-            }
         }
 
-        [HttpPost]
+
+        // Done
         public IActionResult Logout()
         {
             HttpContext.Session.Remove("UserEmail");
             HttpContext.Session.Clear();
-
-            TempData["Message"] = "You have logged out successfully.";
-
             return RedirectToAction("Login");
         }
 
 
         [HttpGet]
         [Route("home/category")]
-        public async Task<IActionResult> Category(int? categoryId, string orderby, decimal? minPrice, decimal? maxPrice, string searchQuery)
+        public async Task<IActionResult> Category(int? categoryId, string orderby, double? minPrice, double? maxPrice, string searchQuery)
         {
             if (categoryId.HasValue)
             {
                 var category = await _context.Category
-                                              .FirstOrDefaultAsync(c => c.ID == categoryId.Value && c.Status == "active");
+                                              .FirstOrDefaultAsync(c => c.Id == categoryId.Value && c.Status);
                 if (category == null)
                 {
                     return Content("Invalid category!");
                 }
             }
 
-            var products = _context.Product.AsQueryable();
+            var query = _context.Product.Where(p => p.IsAvailable && p.InStock > 0 && p.ProductVariants.Any(pv => pv.InStock > 0));
 
             if (categoryId.HasValue)
             {
-                products = products.Where(p => p.CategoryID == categoryId.Value);
+                query = query.Where(p => p.CategoryId == categoryId.Value);
             }
 
             if (minPrice.HasValue && maxPrice.HasValue)
             {
-                products = products.Where(p => p.Price >= minPrice && p.Price <= maxPrice);
-            }
+                query = query.Where(p => p.ProductVariants.Any(pv => pv.Price >= minPrice && pv.Price <= maxPrice && pv.InStock > 0));
 
-            products = products.Where(p => p.Status != "out of stock");
+            }
 
             if (!string.IsNullOrEmpty(searchQuery))
             {
-                products = products.Where(p => p.Name.Contains(searchQuery) || p.Category.Name.Contains(searchQuery));
+                query = query.Where(p => p.Name.Contains(searchQuery) || p.Category.Name.Contains(searchQuery));
             }
 
             if (orderby == "alphabet-asc")
             {
-                products = products.OrderBy(p => p.Name);
+                query = query.OrderBy(p => p.Name);
             }
             else if (orderby == "alphabet-desc")
             {
-                products = products.OrderByDescending(p => p.Name);
+                query = query.OrderByDescending(p => p.Name);
             }
 
-            var productList = await products.ToListAsync();
+            var productList = await query.Include(p => p.ProductVariants.Where(pv => pv.InStock > 0)).AsSplitQuery().ToListAsync();
 
             ViewBag.SelectedCategoryId = categoryId;
-            ViewBag.Categories = await _context.Category.Where(c => c.Status == "active").ToListAsync();
+            ViewBag.Categories = await _context.Category.Where(c => c.Status).ToListAsync();
             ViewBag.OrderBy = orderby;
             ViewBag.MinPrice = minPrice;
             ViewBag.MaxPrice = maxPrice;
@@ -184,58 +230,99 @@ namespace Cosmetic.Controllers
             return View(productList);
         }
 
-        public class ProductDetailViewModel
-        {
-            public Product Product { get; set; }
-            public List<Product> RelatedProducts { get; set; }
-        }
 
-        public async Task<IActionResult> ProductDetail(int id)
+        // Done
+        public async Task<IActionResult> ProductDetail(int id, string size, int quantity)
         {
-            var product = await _context.Product
+            Product? product = await _context.Product
                 .Include(p => p.Category)
-                .FirstOrDefaultAsync(p => p.ID == id);
+                .Include(p => p.ProductVariants.Where(pv => pv.InStock > 0))
+                .FirstOrDefaultAsync(p => p.Id == id);
 
             if (product == null)
             {
                 return NotFound();
             }
 
-            var relatedProducts = await _context.Product
-                .Where(p => p.ID != id)
-                .Take(8)
+            List<Product> relatedProducts = await _context.Product
+                .Where(p => p.Category.Name == product.Category.Name && p.ProductVariants.Any(pv => pv.InStock > 0))
+                .Include(p => p.ProductVariants.Where(pv => pv.InStock > 0))
                 .ToListAsync();
 
-            var viewModel = new ProductDetailViewModel
-            {
-                Product = product,
-                RelatedProducts = relatedProducts
-            };
 
-            return View(viewModel);
+            return View(new ProductDetailViewModel(product, size, quantity, relatedProducts, product.ProductVariants));
         }
-        public IActionResult ShoppingCart() => View();
+        public async Task<IActionResult> ShoppingCart(long cartId)
+        {
+
+
+            var shippingCartDTO = await _context.Cart
+                .Where(cart => cart.Id == cartId)
+                .Include(cart => cart.Customer)
+                .ThenInclude(c => c.AddressShippings.Where(addShip => addShip.IsDefaultAddress))
+                .Select(cart => new ShippingCartDTO
+                {
+                    Id = cart.Id,
+                    cartItems = cart.CartItems.Select(ci => new ShippingCartItemDTO
+                    {
+                        Id = ci.Id,
+                        FinalPrice = ci.Product.ProductVariants.Where(pv => pv.Name == ci.ProductSize)
+                                                                .Select(pv => ((pv.Price * ci.Quantity) * ((100 - ci.Product.Discount) / 100)))
+                                                                .FirstOrDefault(),
+                        ProductDiscount = ci.Product.Discount,
+                        ProductSize = ci.ProductSize,
+                        Quantity = ci.Quantity,
+                        Status = ci.Status,
+                        TotalPrice = ci.Product.ProductVariants.Where(pv => pv.Name == ci.ProductSize)
+                                                                .Select(pv => (pv.Price * ci.Quantity))
+                                                                .FirstOrDefault(),
+                        Product = new ShippingProductDTO
+                        {
+                            Id = ci.Product.Id,
+                            Discount = ci.Product.Discount,
+                            Image = ci.Product.Image,
+                            IsAvailable = ci.Product.IsAvailable,
+                            Name = ci.Product.Name,
+                            ProductVariant = ci.Product.ProductVariants
+                                                .Where(pv => pv.Name == ci.ProductSize)
+                                                .Select(pv => new ShippingProductVariantDTO
+                                                {
+                                                    Id = pv.Id,
+                                                    InStock = pv.InStock,
+                                                    Name = pv.Name,
+                                                    Price = pv.Price,
+                                                }).FirstOrDefault()
+                        }
+                    }).ToList(),
+                    AddressShipping = cart.Customer.AddressShippings.Count() > 0 ? cart.Customer.AddressShippings[0] : null,
+                }).FirstOrDefaultAsync();
+
+
+            return View(shippingCartDTO);
+        }
         public IActionResult CheckOut() => View();
         public IActionResult AboutUs() => View();
 
         [HttpGet]
         [Route("home/compare/{productId}")]
-        public IActionResult Compare(int productId)
+        public async Task<IActionResult> Compare(int productId)
         {
-            var selectedProduct = _context.Product
+            var selectedProduct = await _context.Product
                                           .Include(p => p.Category)
-                                          .FirstOrDefault(p => p.ID == productId);
+                                          .Include(p => p.ProductVariants.Where(pv => pv.InStock > 0))
+                                          .FirstOrDefaultAsync(p => p.Id == productId);
 
             if (selectedProduct == null)
             {
                 return NotFound();
             }
 
-            var relatedProducts = _context.Product
-                                          .Where(p => p.CategoryID == selectedProduct.CategoryID && p.ID != selectedProduct.ID)
-                                          .OrderBy(r => Guid.NewGuid())  
-                                          .Take(3) 
-                                          .ToList();
+            var relatedProducts = await _context.Product
+                                          .Where(p => p.CategoryId == selectedProduct.CategoryId && p.Id != selectedProduct.Id && p.ProductVariants.Any(pv => pv.InStock > 0))
+                                          .Include(p => p.ProductVariants.Where(pv => pv.InStock > 0))
+                                          .OrderBy(r => Guid.NewGuid())
+                                          .Take(3)
+                                          .ToListAsync();
 
             ViewData["SelectedProduct"] = selectedProduct;
             ViewData["RelatedProducts"] = relatedProducts;
@@ -243,13 +330,6 @@ namespace Cosmetic.Controllers
             return View();
         }
 
-
-
-        public class ProductViewModel
-        {
-            public List<Product> AllProducts { get; set; } = new List<Product>();
-            public List<Product> ProductsUnder50 { get; set; } = new List<Product>();
-        }
 
     }
 }
