@@ -14,11 +14,12 @@ namespace Cosmetic.Models
 
         public string Ward { get; set; }
 
+        [MaxLength(255)]
+        public string SpecificPlace { get; set; }
+
         public string PhoneNumber { get; set; }
 
         public bool IsDefaultAddress { get; set; }
-
-        public string Note { get; set; }
 
         public long CustomerId { get; set; }
 
@@ -26,7 +27,7 @@ namespace Cosmetic.Models
 
         public AddressShipping() { }
 
-        public AddressShipping( string name, string province, string district, string ward, string phoneNumber, bool isDefaultAddress, long customerId, Customer customer,string note)
+        public AddressShipping( string name, string province, string district, string ward, string phoneNumber, bool isDefaultAddress,string specifiPlace, long customerId, Customer customer)
         {
             Name = name;
             Province = province;
@@ -36,7 +37,7 @@ namespace Cosmetic.Models
             IsDefaultAddress = isDefaultAddress;
             CustomerId = customerId;
             Customer = customer;
-            Note = note;
+            SpecificPlace = specifiPlace;
         }
     }
 }

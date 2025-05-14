@@ -1,6 +1,7 @@
 ﻿using Cosmetic.Data;
 using Cosmetic.Models;
 using Cosmetic.Models.ViewModels;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,51 +10,66 @@ namespace Cosmetic.ViewComponents
     public class CustomerProfileViewComponent : ViewComponent
     {
         private readonly CosmeticContext _context;
-
-        public CustomerProfileViewComponent(CosmeticContext context)
+        private readonly UserManager<IdentityUser> _userManager;
+        public CustomerProfileViewComponent(CosmeticContext context, UserManager<IdentityUser> userManager)
         {
-            this._context = context;
+            _context = context;
+            _userManager = userManager;
         }
 
-        public async Task<IViewComponentResult> InvokeAsync(string mode = "default", EditCustomerViewModel tempEditCustomer = null)
+        public async Task<IViewComponentResult> InvokeAsync(string mode = "Default")
         {
-            var userEmail = HttpContext.Session.GetString("UserEmail");
+            var tempUser = HttpContext.User;
 
-            Customer customer = await _context.Customer.Include(eachCustomer => eachCustomer.Rank).AsNoTracking().FirstOrDefaultAsync(eachCustomer => eachCustomer.Email == userEmail);
-            EditCustomerViewModel editCustomer = null;
-            if(tempEditCustomer == null)
+            if (!tempUser.Identity.IsAuthenticated)
             {
-                editCustomer = new EditCustomerViewModel
+                return Content("User is not authenticated");
+            }
+
+            var user = await _userManager.GetUserAsync(tempUser);
+
+
+
+            if (mode == "EditProfile")
+            {
+                Customer customerEditProfile = await _context.Customer.FirstOrDefaultAsync(eachCustomer => eachCustomer.UserId == user.Id);
+
+                if (customerEditProfile == null)
                 {
-                    Name = customer.Name,
-                    Address = customer.Address,
-                    PhoneNumber = customer.PhoneNumber,
-                    DoB = customer.DateOfBirth,
-                    Email = customer.Email,
-                    Gender = customer.Gender
-                };
+                    return Content("Customer not found");
+                }
+                
+                return View(mode, new EditCustomerViewModel
+                {
+                    Name = customerEditProfile.Name,
+                    Address = customerEditProfile.Address,
+                    PhoneNumber = customerEditProfile.PhoneNumber,
+                    DoB = customerEditProfile.DateOfBirth,
+                    Email = user.Email,
+                    Gender = customerEditProfile.Gender
+                });
             }
-            else
+            if (mode == "ChangePassword")
             {
-                editCustomer = new EditCustomerViewModel { 
-                    Name = tempEditCustomer.Name,
-                    Address = tempEditCustomer.Address,
-                    PhoneNumber = tempEditCustomer.PhoneNumber,
-                    DoB = tempEditCustomer.DoB,
-                    Email = tempEditCustomer.Email,
-                    Gender = tempEditCustomer.Gender
-                };
-            }
-            if (mode == "editProfile")
-            {
-                return View("EditProfile", editCustomer);
-            }
-            if (mode == "changePassword")
-            {
-                return View("ChangePassword", editCustomer);
+                return View(mode, new ChangePasswordCustomerViewModel());
             }
 
-            return View("Default", customer);
+            if(mode == "AddressShipping")
+            {
+                Customer customerAddressShipping = await _context.Customer.Include(c => c.AddressShippings).FirstOrDefaultAsync(eachCustomer => eachCustomer.UserId == user.Id);
+
+                if (customerAddressShipping == null)
+                {
+                    return Content("Customer not found");
+                }
+
+                return View(mode, new AddressShippingViewModel
+                {
+                    ListAddressShipping = customerAddressShipping.AddressShippings
+                });
+            }
+            Customer customer = await _context.Customer.Include(eachCustomer => eachCustomer.Rank).Include(c => c.User).FirstOrDefaultAsync(eachCustomer => eachCustomer.UserId == user.Id);
+            return View(mode, customer);
 
         }
     }

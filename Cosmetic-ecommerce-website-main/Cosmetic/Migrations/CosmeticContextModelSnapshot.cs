@@ -44,10 +44,6 @@ namespace Cosmetic.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Note")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -55,6 +51,11 @@ namespace Cosmetic.Migrations
                     b.Property<string>("Province")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SpecificPlace")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("Ward")
                         .IsRequired()
@@ -81,10 +82,6 @@ namespace Cosmetic.Migrations
                     b.Property<DateTime>("DateOfBirth")
                         .HasColumnType("date");
 
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("Gender")
                         .HasColumnType("bit");
 
@@ -95,25 +92,17 @@ namespace Cosmetic.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Roles")
+                    b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<long>("UserId")
-                        .HasColumnType("bigint");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId")
-                        .IsUnique();
+                    b.HasIndex("UserId");
 
                     b.ToTable("Admin");
                 });
@@ -221,10 +210,6 @@ namespace Cosmetic.Migrations
                     b.Property<DateTime>("DateOfBirth")
                         .HasColumnType("date");
 
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("Gender")
                         .HasColumnType("bit");
 
@@ -238,10 +223,6 @@ namespace Cosmetic.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -249,22 +230,18 @@ namespace Cosmetic.Migrations
                     b.Property<long>("RankId")
                         .HasColumnType("bigint");
 
-                    b.Property<string>("Roles")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("date");
 
-                    b.Property<long>("UserId")
-                        .HasColumnType("bigint");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("RankId");
 
-                    b.HasIndex("UserId")
-                        .IsUnique();
+                    b.HasIndex("UserId");
 
                     b.ToTable("Customer");
                 });
@@ -276,10 +253,6 @@ namespace Cosmetic.Migrations
                         .HasColumnType("bigint");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<string>("Address")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<long>("CustomerId")
                         .HasColumnType("bigint");
@@ -293,6 +266,10 @@ namespace Cosmetic.Migrations
 
                     b.Property<double>("LoyalPointEarned")
                         .HasColumnType("float");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Note")
                         .HasColumnType("nvarchar(max)");
@@ -317,6 +294,10 @@ namespace Cosmetic.Migrations
 
                     b.Property<double>("RankDiscount")
                         .HasColumnType("float");
+
+                    b.Property<string>("SpecificPlace")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<double>("TotalDiscount")
                         .HasColumnType("float");
@@ -446,408 +427,6 @@ namespace Cosmetic.Migrations
                     b.HasIndex("ProductId");
 
                     b.ToTable("ProductVariant");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1L,
-                            InStock = 120,
-                            Name = "12ml",
-                            Price = 56.0,
-                            ProductId = 6L
-                        },
-                        new
-                        {
-                            Id = 2L,
-                            InStock = 80,
-                            Name = "18ml",
-                            Price = 80.0,
-                            ProductId = 6L
-                        },
-                        new
-                        {
-                            Id = 3L,
-                            InStock = 50,
-                            Name = "24ml",
-                            Price = 100.0,
-                            ProductId = 6L
-                        },
-                        new
-                        {
-                            Id = 4L,
-                            InStock = 100,
-                            Name = "10g",
-                            Price = 35.0,
-                            ProductId = 7L
-                        },
-                        new
-                        {
-                            Id = 5L,
-                            InStock = 75,
-                            Name = "15g",
-                            Price = 52.0,
-                            ProductId = 7L
-                        },
-                        new
-                        {
-                            Id = 6L,
-                            InStock = 75,
-                            Name = "20g",
-                            Price = 65.0,
-                            ProductId = 7L
-                        },
-                        new
-                        {
-                            Id = 7L,
-                            InStock = 70,
-                            Name = "8g",
-                            Price = 30.0,
-                            ProductId = 8L
-                        },
-                        new
-                        {
-                            Id = 8L,
-                            InStock = 50,
-                            Name = "12g",
-                            Price = 45.0,
-                            ProductId = 8L
-                        },
-                        new
-                        {
-                            Id = 9L,
-                            InStock = 30,
-                            Name = "15g",
-                            Price = 55.0,
-                            ProductId = 8L
-                        },
-                        new
-                        {
-                            Id = 10L,
-                            InStock = 80,
-                            Name = "5ml",
-                            Price = 22.0,
-                            ProductId = 9L
-                        },
-                        new
-                        {
-                            Id = 11L,
-                            InStock = 70,
-                            Name = "10ml",
-                            Price = 35.0,
-                            ProductId = 9L
-                        },
-                        new
-                        {
-                            Id = 12L,
-                            InStock = 50,
-                            Name = "15ml",
-                            Price = 50.0,
-                            ProductId = 9L
-                        },
-                        new
-                        {
-                            Id = 13L,
-                            InStock = 60,
-                            Name = "6ml",
-                            Price = 20.0,
-                            ProductId = 10L
-                        },
-                        new
-                        {
-                            Id = 14L,
-                            InStock = 50,
-                            Name = "10ml",
-                            Price = 32.0,
-                            ProductId = 10L
-                        },
-                        new
-                        {
-                            Id = 15L,
-                            InStock = 40,
-                            Name = "12ml",
-                            Price = 40.0,
-                            ProductId = 10L
-                        },
-                        new
-                        {
-                            Id = 16L,
-                            InStock = 100,
-                            Name = "3ml",
-                            Price = 15.0,
-                            ProductId = 11L
-                        },
-                        new
-                        {
-                            Id = 17L,
-                            InStock = 100,
-                            Name = "5ml",
-                            Price = 25.0,
-                            ProductId = 11L
-                        },
-                        new
-                        {
-                            Id = 18L,
-                            InStock = 80,
-                            Name = "8ml",
-                            Price = 35.0,
-                            ProductId = 11L
-                        },
-                        new
-                        {
-                            Id = 19L,
-                            InStock = 110,
-                            Name = "10ml",
-                            Price = 53.0,
-                            ProductId = 12L
-                        },
-                        new
-                        {
-                            Id = 20L,
-                            InStock = 80,
-                            Name = "15ml",
-                            Price = 75.0,
-                            ProductId = 12L
-                        },
-                        new
-                        {
-                            Id = 21L,
-                            InStock = 60,
-                            Name = "20ml",
-                            Price = 90.0,
-                            ProductId = 12L
-                        },
-                        new
-                        {
-                            Id = 22L,
-                            InStock = 100,
-                            Name = "3g",
-                            Price = 20.0,
-                            ProductId = 13L
-                        },
-                        new
-                        {
-                            Id = 23L,
-                            InStock = 80,
-                            Name = "5g",
-                            Price = 30.0,
-                            ProductId = 13L
-                        },
-                        new
-                        {
-                            Id = 24L,
-                            InStock = 70,
-                            Name = "8g",
-                            Price = 40.0,
-                            ProductId = 13L
-                        },
-                        new
-                        {
-                            Id = 25L,
-                            InStock = 90,
-                            Name = "12ml",
-                            Price = 72.0,
-                            ProductId = 14L
-                        },
-                        new
-                        {
-                            Id = 26L,
-                            InStock = 80,
-                            Name = "18ml",
-                            Price = 95.0,
-                            ProductId = 14L
-                        },
-                        new
-                        {
-                            Id = 27L,
-                            InStock = 80,
-                            Name = "24ml",
-                            Price = 120.0,
-                            ProductId = 14L
-                        },
-                        new
-                        {
-                            Id = 28L,
-                            InStock = 40,
-                            Name = "30ml",
-                            Price = 45.0,
-                            ProductId = 15L
-                        },
-                        new
-                        {
-                            Id = 29L,
-                            InStock = 30,
-                            Name = "50ml",
-                            Price = 75.0,
-                            ProductId = 15L
-                        },
-                        new
-                        {
-                            Id = 30L,
-                            InStock = 30,
-                            Name = "100ml",
-                            Price = 120.0,
-                            ProductId = 15L
-                        },
-                        new
-                        {
-                            Id = 31L,
-                            InStock = 40,
-                            Name = "15g",
-                            Price = 62.0,
-                            ProductId = 16L
-                        },
-                        new
-                        {
-                            Id = 32L,
-                            InStock = 30,
-                            Name = "25g",
-                            Price = 90.0,
-                            ProductId = 16L
-                        },
-                        new
-                        {
-                            Id = 33L,
-                            InStock = 30,
-                            Name = "35g",
-                            Price = 115.0,
-                            ProductId = 16L
-                        },
-                        new
-                        {
-                            Id = 34L,
-                            InStock = 20,
-                            Name = "30ml",
-                            Price = 80.0,
-                            ProductId = 17L
-                        },
-                        new
-                        {
-                            Id = 35L,
-                            InStock = 15,
-                            Name = "50ml",
-                            Price = 115.0,
-                            ProductId = 17L
-                        },
-                        new
-                        {
-                            Id = 36L,
-                            InStock = 15,
-                            Name = "100ml",
-                            Price = 165.0,
-                            ProductId = 17L
-                        },
-                        new
-                        {
-                            Id = 37L,
-                            InStock = 150,
-                            Name = "Standard",
-                            Price = 25.0,
-                            ProductId = 18L
-                        },
-                        new
-                        {
-                            Id = 38L,
-                            InStock = 100,
-                            Name = "30ml",
-                            Price = 15.0,
-                            ProductId = 19L
-                        },
-                        new
-                        {
-                            Id = 39L,
-                            InStock = 80,
-                            Name = "60ml",
-                            Price = 25.0,
-                            ProductId = 19L
-                        },
-                        new
-                        {
-                            Id = 40L,
-                            InStock = 70,
-                            Name = "100ml",
-                            Price = 40.0,
-                            ProductId = 19L
-                        },
-                        new
-                        {
-                            Id = 41L,
-                            InStock = 50,
-                            Name = "Standard",
-                            Price = 95.0,
-                            ProductId = 20L
-                        },
-                        new
-                        {
-                            Id = 42L,
-                            InStock = 150,
-                            Name = "Small",
-                            Price = 5.0,
-                            ProductId = 21L
-                        },
-                        new
-                        {
-                            Id = 43L,
-                            InStock = 120,
-                            Name = "Medium",
-                            Price = 8.0,
-                            ProductId = 21L
-                        },
-                        new
-                        {
-                            Id = 44L,
-                            InStock = 80,
-                            Name = "Large",
-                            Price = 12.0,
-                            ProductId = 21L
-                        },
-                        new
-                        {
-                            Id = 45L,
-                            InStock = 20,
-                            Name = "5ml",
-                            Price = 15.0,
-                            ProductId = 22L
-                        },
-                        new
-                        {
-                            Id = 46L,
-                            InStock = 15,
-                            Name = "10ml",
-                            Price = 25.0,
-                            ProductId = 22L
-                        },
-                        new
-                        {
-                            Id = 47L,
-                            InStock = 15,
-                            Name = "15ml",
-                            Price = 35.0,
-                            ProductId = 22L
-                        },
-                        new
-                        {
-                            Id = 48L,
-                            InStock = 20,
-                            Name = "15g",
-                            Price = 92.0,
-                            ProductId = 23L
-                        },
-                        new
-                        {
-                            Id = 49L,
-                            InStock = 15,
-                            Name = "20g",
-                            Price = 120.0,
-                            ProductId = 23L
-                        },
-                        new
-                        {
-                            Id = 50L,
-                            InStock = 15,
-                            Name = "25g",
-                            Price = 145.0,
-                            ProductId = 23L
-                        });
                 });
 
             modelBuilder.Entity("Cosmetic.Models.Rank", b =>
@@ -903,29 +482,206 @@ namespace Cosmetic.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Cosmetic.Models.User", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<string>("Email")
-                        .IsRequired()
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("Name")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
 
-                    b.Property<string>("Roles")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("NormalizedName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("User");
+                    b.HasIndex("NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("RoleNameIndex")
+                        .HasFilter("[NormalizedName] IS NOT NULL");
+
+                    b.ToTable("AspNetRoles", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RoleId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetRoleClaims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUser", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("LockoutEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("NormalizedEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("NormalizedUserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedEmail")
+                        .HasDatabaseName("EmailIndex");
+
+                    b.HasIndex("NormalizedUserName")
+                        .IsUnique()
+                        .HasDatabaseName("UserNameIndex")
+                        .HasFilter("[NormalizedUserName] IS NOT NULL");
+
+                    b.ToTable("AspNetUsers", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserClaims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+                {
+                    b.Property<string>("LoginProvider")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<string>("ProviderKey")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<string>("ProviderDisplayName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("LoginProvider", "ProviderKey");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserLogins", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("RoleId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetUserRoles", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("LoginProvider")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("UserId", "LoginProvider", "Name");
+
+                    b.ToTable("AspNetUserTokens", (string)null);
                 });
 
             modelBuilder.Entity("Cosmetic.Models.AddressShipping", b =>
@@ -941,9 +697,9 @@ namespace Cosmetic.Migrations
 
             modelBuilder.Entity("Cosmetic.Models.Admin", b =>
                 {
-                    b.HasOne("Cosmetic.Models.User", "User")
-                        .WithOne("Admin")
-                        .HasForeignKey("Cosmetic.Models.Admin", "UserId")
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -988,9 +744,9 @@ namespace Cosmetic.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Cosmetic.Models.User", "User")
-                        .WithOne("Customer")
-                        .HasForeignKey("Cosmetic.Models.Customer", "UserId")
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1051,6 +807,57 @@ namespace Cosmetic.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Cosmetic.Models.Cart", b =>
                 {
                     b.Navigation("CartItems");
@@ -1088,15 +895,6 @@ namespace Cosmetic.Migrations
             modelBuilder.Entity("Cosmetic.Models.Rank", b =>
                 {
                     b.Navigation("Customers");
-                });
-
-            modelBuilder.Entity("Cosmetic.Models.User", b =>
-                {
-                    b.Navigation("Admin")
-                        .IsRequired();
-
-                    b.Navigation("Customer")
-                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

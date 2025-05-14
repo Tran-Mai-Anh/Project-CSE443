@@ -1,6 +1,8 @@
 ﻿using System.Drawing;
 using Cosmetic.Data;
 using Cosmetic.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,21 +12,35 @@ namespace Cosmetic.Controllers
     {
 
         private readonly CosmeticContext _context;
+        private readonly UserManager<IdentityUser> _userManager;
+        private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
-        public CartsController(CosmeticContext context)
+        public CartsController(CosmeticContext context, UserManager<IdentityUser> userManager,
+                             SignInManager<IdentityUser> signInManager,
+                             RoleManager<IdentityRole> roleManager)
         {
             this._context = context;
+            _userManager = userManager;
+            _signInManager = signInManager;
+            _roleManager = roleManager;
         }
+        [Authorize]
         public IActionResult Index()
         {
             return View();
         }
 
         [HttpPost]
+        [Authorize(Roles ="CUSTOMER")]
         public async Task<IActionResult> AddProductToCart(long productId, string? productSize, int quantity)
         {
-            string email = HttpContext.Session.GetString("UserEmail");
-            Customer customer = await _context.Customer.Include(eachCustomer => eachCustomer.Cart).ThenInclude(eachCart => eachCart.CartItems).FirstOrDefaultAsync(eachCustomer => eachCustomer.Email == email);
+            var identityUser = await _userManager.GetUserAsync(User);
+            if (identityUser == null)
+            {
+                return NotFound();
+            }
+            Customer customer = await _context.Customer.Include(eachCustomer => eachCustomer.Cart).ThenInclude(eachCart => eachCart.CartItems).FirstOrDefaultAsync(eachCustomer => eachCustomer.UserId == identityUser.Id);
 
             Product product = await _context.Product.Include(eachProduct => eachProduct.ProductVariants.Where(pv => pv.InStock > 0)).FirstOrDefaultAsync(eachProduct => eachProduct.Id == productId);
 
@@ -73,6 +89,7 @@ namespace Cosmetic.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "CUSTOMER")]
         public async Task<IActionResult> ChangeQuantityCartItem(long cartItemId, int newQuantity, string productSize)
         {
             CartItem cartItem = await _context.CartItems.Include(ci => ci.Product).ThenInclude(p => p.ProductVariants.Where(pv => pv.Name == productSize)).FirstOrDefaultAsync(ci => ci.Id == cartItemId);
@@ -103,6 +120,30 @@ namespace Cosmetic.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "CUSTOMER")]
+        public async Task<IActionResult> DeleteCartItemInShippingCart(long id,string productSize)
+        {
+            CartItem cartItem = await _context.CartItems.Include(ci=> ci.Product).ThenInclude(p => p.ProductVariants.Where(pv => pv.Name == productSize)).FirstOrDefaultAsync(ci => ci.Id == id);
+            Product product = cartItem.Product;
+            ProductVariant productVariant = product.ProductVariants[0];
+            double totalPrice = productVariant.Price * cartItem.Quantity;
+            double productDiscount = product.Discount;
+            double finalPrice = totalPrice * ((100 - productDiscount) / 100);
+
+            _context.CartItems.Remove(cartItem);
+            await _context.SaveChangesAsync();
+            return Json(new
+            {
+                success = true,
+                newFinalPrice = -finalPrice,
+                newTotalPrice = -totalPrice,
+                message="Delete Successfully!!"
+            });
+            
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "CUSTOMER")]
         public async Task<IActionResult> toggleCheckBoxCartItem(long cartItemId, bool isChecked,string productSize)
         {
             CartItem cartItem = await _context.CartItems.Include(ci => ci.Product).ThenInclude(p => p.ProductVariants.Where(pv => pv.Name == productSize)).FirstOrDefaultAsync(ci => ci.Id == cartItemId);
@@ -127,6 +168,7 @@ namespace Cosmetic.Controllers
 
 
         [HttpPost]
+        [Authorize(Roles = "CUSTOMER")]
         public IActionResult ReloadMiniCart()
         {
             return ViewComponent("MiniCart");

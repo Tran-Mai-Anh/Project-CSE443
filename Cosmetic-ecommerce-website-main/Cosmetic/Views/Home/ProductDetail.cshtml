@@ -3,7 +3,7 @@
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Product Detail";
-    var userEmail = Context.Session.GetString("UserEmail");
+    var userEmail = ViewBag.UserEmail as string;
     var product = Model.Product;
     string size = Model.Size;
     int quantity = Model.Quantity != 0 ? Model.Quantity : 1;
@@ -16,23 +16,8 @@
 
 }
 <main id="content" class="wrapper layout-page">
-    <div class="modal fade" id="loginRequiredModalHomeProductDetail" tabindex="-1" aria-labelledby="loginRequiredLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content rounded-4">
-                <div class="modal-header border-0">
-                    <h5 class="modal-title fw-bold" id="loginRequiredLabel">You have to login</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
-                </div>
-                <div class="modal-body text-center">
-                    <p>You have to login to buy this product. Login now?</p>
-                </div>
-                <div class="modal-footer border-0 justify-content-center">
-                    <button type="button" class="btn btn-secondary px-4" style="width: 100px" data-bs-dismiss="modal">No</button>
-                    <button type="button" class="btn btn-primary px-4" style="width: 100px" onclick="notLoginInProductDetail()">Yes</button>
-                </div>
-            </div>
-        </div>
-    </div>
+
+
     <section class="container pt-6 pb-13 pb-lg-20">
         <div class="row">
             <div class="col-md-6 pe-lg-13 pb-12">
@@ -76,7 +61,7 @@
                         </div>
                         <div class="col-12">
                             <button type="button" class="btn btn-lg btn-dark btn-block mb-7 mt-8 w-100 btn-hover-bg-primary btn-hover-border-primary"
-                                    onclick="@(string.IsNullOrEmpty(userEmail) ? "showLoginPopup('HomeProductDetail')" : $"addToCart({product.Id})")">
+                                    onclick="@(string.IsNullOrEmpty(userEmail) ? "showLoginPopup('HomeIndex')" : $"addToCart({product.Id})")">
                                 Add To Cart
                             </button>
                         </div>
@@ -152,7 +137,7 @@
                                     <i class="icon fs-6 icon-arrows-left-right-light fa-solid fa-arrow-right-arrow-left"></i>
                                 </a>
                             </div>
-                            <a href="javascript:;" onclick="addToCart(@prod.Id)"
+                            <a href="javascript:;" onclick="@(string.IsNullOrEmpty(userEmail) ? "showLoginPopup('HomeIndex')" : $"addToCart({product.Id})")"
                                class="btn btn-add-to-cart btn-dark btn-hover-bg-primary btn-hover-border-primary position-absolute z-index-2 text-nowrap">
                                 Add To Cart
                             </a>
@@ -170,7 +155,7 @@
                             </span>
                             <h4 class="product-title card-title text-primary-hover text-body-emphasis fs-15px fw-500 mb-3">
                                 <a class="text-decoration-none text-reset" href="@Url.Action("ProductDetail", "Home", new { id = prod.Id })">
-                                    @prod.Name
+                                    @prod.Name ( @prod.ProductVariants[0].Name )
                                 </a>
                             </h4>
                         </div>

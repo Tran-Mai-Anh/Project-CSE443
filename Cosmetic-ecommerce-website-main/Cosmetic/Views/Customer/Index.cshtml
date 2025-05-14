@@ -1,9 +1,11 @@
 ﻿@model Cosmetic.Models.Customer
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
-    var section = ViewBag.Section as string;
+    var sectionValue = ViewBag.Section as string;
+    var mode = ViewBag.Mode as string;
+    var idEdit = ViewBag.IdEdit;
     var customer = Model;
-    
+    ViewData["Title"] = "Customer Information";
 }
 
 <div class="container-fluid py-5">
@@ -17,31 +19,31 @@
                         </div>
                         <div>
                             <h6 class="mb-2 fw-bold">@customer.Name</h6>
-                            <small class="text-muted">@customer.Email</small>
+                            <small class="text-muted">@customer.User.Email</small>
                         </div>
                     </div>
                     <div class="user-profile-sidebar__menu">
-                        <ul class="list-group list-group-flush">
-                            <li class="list-group-item user-profile-sidebar__menu-item active">
-                                <a href="javascript:;" class="d-flex align-items-center text-decoration-none gap-4" onclick="loadUserSection('customerProfile')">
+                        <ul class="list-group list-group-flush" id="storeMenuBarCustomer">
+                            <li class="list-group-item user-profile-sidebar__menu-item @(sectionValue == "CustomerProfile" ? "active" : "" )">
+                                <a asp-controller="Customer" asp-action="Index" asp-route-section="CustomerProfile" asp-route-mode="Default" class="d-flex align-items-center text-decoration-none gap-4">
                                     <i class="fas fa-user me-3"></i>
                                     <span>My Profile</span>
                                 </a>
                             </li>
-                            <li class="list-group-item user-profile-sidebar__menu-item">
-                                <a href="javascript:;" class="d-flex align-items-center text-decoration-none text-body gap-4" onclick="loadUserSection('customerOrder')">
+                            <li class="list-group-item user-profile-sidebar__menu-item @(sectionValue == "CustomerOrder" ? "active" : "" )">
+                                <a asp-controller="Customer" asp-action="Index" asp-route-section="CustomerOrder" asp-route-mode="Default" class="d-flex align-items-center text-decoration-none gap-4">
                                     <i class="fas fa-shopping-bag me-3"></i>
                                     <span>My Orders</span>
                                 </a>
                             </li>
-                            <li class="list-group-item user-profile-sidebar__menu-item">
-                                <a href="javascript:;" class="d-flex align-items-center text-decoration-none text-body gap-4" onclick="loadUserSection('customerAddress')">
+                            <li class="list-group-item user-profile-sidebar__menu-item @(sectionValue == "CustomerAddressShipping" ? "active" : "" )" >
+                                <a asp-controller="Customer" asp-action="Index" asp-route-section="CustomerAddressShipping" asp-route-mode="Default" class="d-flex align-items-center text-decoration-none  gap-4">
                                     <i class="fas fa-map-marker-alt me-3"></i>
                                     <span>My Shipping Addresses</span>
                                 </a>
                             </li>
                             <li class="list-group-item user-profile-sidebar__menu-item">
-                                <a href="javascript:;" class="d-flex align-items-center text-decoration-none text-danger gap-4">
+                                <a  class="d-flex align-items-center text-decoration-none text-danger gap-4" asp-controller="Home" asp-action="Logout">
                                     <i class="fas fa-sign-out-alt me-3"></i>
                                     <span>Logout</span>
                                 </a>
@@ -52,10 +54,26 @@
             </div>
         </div>
         <div class="col-lg-9 col-md-8" id="customerAllInformation">
-            @if (!string.IsNullOrEmpty(section))
+            @if (!string.IsNullOrEmpty(sectionValue))
             {
-                @await Component.InvokeAsync(section)
+                @await Component.InvokeAsync(sectionValue, new { mode = mode, id = idEdit  })
             }
         </div>
     </div>
 </div>
+
+<script>
+           document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('storeMenuBarCustomer').addEventListener("click", function (e) {
+            const clickedLi = e.target.closest('.user-profile-sidebar__menu-item');
+            if (clickedLi) {
+                document.querySelectorAll('.user-profile-sidebar__menu-item').forEach(li => li.classList.remove('active'));
+                clickedLi.classList.add('active');
+            }
+        });
+    });
+
+
+
+
+</script>

@@ -7,47 +7,62 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Cosmetic.Data;
 using Cosmetic.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
+using Cosmetic.Models.ViewModels;
 
 namespace Cosmetic.Controllers
 {
+    [Authorize(Roles = "ADMIN")]
     public class ProductsController : Controller
     {
         private readonly CosmeticContext _context;
-
-        public ProductsController(CosmeticContext context)
+        private readonly UserManager<IdentityUser> _userManager;
+        private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly int _pageSize = 10;
+        public ProductsController(CosmeticContext context, UserManager<IdentityUser> userManager,
+                             SignInManager<IdentityUser> signInManager,
+                             RoleManager<IdentityRole> roleManager)
         {
             _context = context;
+            _userManager = userManager;
+            _signInManager = signInManager;
+            _roleManager = roleManager;
         }
 
-        // GET: Products
-        //public async Task<IActionResult> Index()
-        //{
-        //    return View(await _context.Product.ToListAsync());
-        //}
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index(int page = 1)
         {
-            var products = _context.Product
+            var products = await _context.Product
                                     .Include(p => p.Category)
-                                    .OrderByDescending(p => p.CreateTime)
-                                    .ToList();
+                                    .OrderBy(p => p.Id)
+                                    .ToListAsync();
 
-            return View(products);
+            var totalProducts = products.Count();
+            var totalPages = (int)Math.Ceiling(totalProducts / (double)_pageSize);
+
+            page = Math.Max(1, Math.Min(page, Math.Max(1, totalPages)));
+
+            var result = products
+                .OrderBy(p => p.Id)
+                .Skip((page - 1) * _pageSize)
+                .Take(_pageSize)
+                .ToList();
+
+            return View(new DashboardProductIndexViewModel
+            {
+                CurrentPage = page,
+                TotalPages = totalPages,
+                productList = result
+            });
         }
 
-
-
-
-        // GET: Products/Details/5
-        public async Task<IActionResult> Details(int? id)
+        public async Task<IActionResult> ProductDetail(long id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
 
-            var product = await _context.Product
-                .FirstOrDefaultAsync(m => m.Id == id);
+
+            var product = await _context.Product.FindAsync(id);
             if (product == null)
             {
                 return NotFound();
@@ -56,126 +71,110 @@ namespace Cosmetic.Controllers
             return View(product);
         }
 
-        // GET: Products/Create
-        //public IActionResult Create()
-        //{
-        //    return View();
-        //}
-        public IActionResult Create()
+        public async Task<IActionResult> CreateProduct()
         {
-            var categories = _context.Category.ToList();
+            var categories = await _context.Category.ToListAsync();
 
-            ViewBag.Categories = categories;
-
-            return View();
+            return View(new ProductCreateViewModel
+            {
+                CategoryMenu = categories,
+            });
         }
 
-
-        // POST: Products/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> Create([Bind("Name,Price,Image,InStock,Status")] Product product)
-        //{
-        //    if (ModelState.IsValid)
-        //    {
-        //        _context.Add(product);
-        //        await _context.SaveChangesAsync();
-        //        return RedirectToAction(nameof(Index));
-        //    }
-
-        //    if (string.IsNullOrEmpty(product.Image))
-        //    {
-        //        product.Image = "~/assets/images/dashboard/upload.svg";  
-        //    }
-
-        //    return View(product);
-        //}
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Name,Description,Price,InStock,Status,CategoryID")] Product product, IFormFile? ImageFile)
+        public async Task<IActionResult> CreateProduct(ProductCreateViewModel productCreateView, IFormFile ImageFile)
         {
             if (!ModelState.IsValid)
             {
-                TempData["Error"] = "Validation failed. Please check your inputs.";
-                return View(product);
-            }
+                var fieldErrors = ModelState
+                          .Where(x => x.Value.Errors.Count > 0)
+                          .ToDictionary(
+                          kvp => kvp.Key,
+                          kvp => kvp.Value.Errors.First().ErrorMessage
+                            );
 
-            try
-            {
-                if (ImageFile != null && ImageFile.Length > 0)
+                return Json(new
                 {
-                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/assets/images/products");
-                    Directory.CreateDirectory(uploadsFolder);
-
-                    var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(ImageFile.FileName);
-                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await ImageFile.CopyToAsync(stream);
-                    }
-
-                    product.Image = "/assets/images/products/" + uniqueFileName;
-                }
-                else
-                {
-                    product.Image = "/assets/images/dashboard/upload.svg";
-                }
-
-                product.CreateTime = DateTime.Now;
-                _context.Add(product);
-                await _context.SaveChangesAsync();
-
-                TempData["Success"] = "Product has been created!";
-                return RedirectToAction(nameof(Index));
+                    success = false,
+                    message = "Failed to create product",
+                    fieldErrors
+                });
             }
-            catch (Exception ex)
+
+            var haveSameName = await _context.Product.FirstOrDefaultAsync(p => p.Name == productCreateView.Name);
+            if (haveSameName != null)
             {
-                TempData["Error"] = "Error creating product: " + ex.Message;
-                return View(product);
+                return Json(new
+                {
+                    success = false,
+                    message = "This name already exist"
+                });
             }
+
+            if (ImageFile == null || ImageFile.Length == 0)
+            {
+                var customFieldErrors = new Dictionary<string, string>();
+
+                customFieldErrors["Image"] = "Image is required";
+                return Json(new
+                {
+                    success = false,
+                    message = "Failed to create product",
+                    fieldErrors = customFieldErrors
+                });
+            }
+
+            string imagePath = string.Empty;
+
+
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/assets/images/products");
+            Directory.CreateDirectory(uploadsFolder);
+
+            var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(ImageFile.FileName);
+            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await ImageFile.CopyToAsync(stream);
+            }
+
+            imagePath = "/assets/images/products/" + uniqueFileName;
+
+            Category category = await _context.Category.FirstOrDefaultAsync(c => c.Id == productCreateView.CategoryId);
+            Product product = new Product
+            {
+                Category = category,
+                CategoryId = category.Id,
+                CreateTime = DateTime.Now,
+                Description = productCreateView.Description,
+                Discount = productCreateView.Discount,
+                Name = productCreateView.Name,
+                IsAvailable = productCreateView.IsAvailable,
+                InStock = 0,
+                ProductType = productCreateView.ProductType,
+                CartItems = [],
+                OrderDetails = [],
+                ProductVariants = [],
+                Image = imagePath
+            };
+
+            _context.Product.Add(product);
+            await _context.SaveChangesAsync();
+
+            return Json(new
+            {
+                success = true,
+                message = "Create Successfully, Please create its product variants"
+            });
         }
 
-
-
-
-
-
-
-
-
-
-        // GET: Products/Edit/5
-        //public async Task<IActionResult> Edit(int? id)
-        //{
-        //    if (id == null)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    var product = await _context.Product.FindAsync(id);
-        //    if (product == null)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    // Lấy danh sách danh mục và truyền vào ViewBag
-        //    var categories = await _context.Category.ToListAsync();
-        //    ViewBag.Categories = categories;
-
-        //    return View(product);
-        //}
-        public async Task<IActionResult> Edit(int? id)
+        public async Task<IActionResult> EditProduct(long id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+
 
             var product = await _context.Product
                 .Include(p => p.Category)
+                .Include(p => p.ProductVariants)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (product == null)
@@ -183,195 +182,122 @@ namespace Cosmetic.Controllers
                 return NotFound();
             }
 
-            ViewBag.Categories = new SelectList(await _context.Category.ToListAsync(), "ID", "Name", product.CategoryId);
+            var categories = await _context.Category.ToListAsync();
 
-            return View(product);
+            return View(new ProductEditViewModel
+            {
+                Id = product.Id,
+                ProductVariants = product.ProductVariants,
+                CategoryId = product.CategoryId,
+                CreateTime = product.CreateTime,
+                Description = product.Description,
+                Discount = product.Discount,
+                Image = product.Image,
+                InStock = product.InStock,
+                IsAvailable = product.IsAvailable,
+                Name = product.Name,
+                ProductType = product.ProductType,
+                CategoryMenu = categories
+            });
         }
 
 
-
-
-
-
-
-        // POST: Products/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> Edit(int id, [Bind("ID,Name,Price,Image,InStock,Status")] Product product)
-        //{
-        //    if (id != product.ID)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    if (ModelState.IsValid)
-        //    {
-        //        try
-        //        {
-        //            _context.Update(product);
-        //            await _context.SaveChangesAsync();
-        //        }
-        //        catch (DbUpdateConcurrencyException)
-        //        {
-        //            if (!ProductExists(product.ID))
-        //            {
-        //                return NotFound();
-        //            }
-        //            else
-        //            {
-        //                throw;
-        //            }
-        //        }
-        //        return RedirectToAction(nameof(Index));
-        //    }
-        //    return View(product);
-        //}
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ID,Name,Description,Price,InStock,Status,CategoryID,Image")] Product product, IFormFile? ImageFile)
+        [HttpPut]
+        public async Task<IActionResult> EditProduct(ProductEditViewModel productEditView, IFormFile? ImageFile)
         {
-            if (id != product.Id)
+
+            if (!ModelState.IsValid)
+            {
+                var fieldErrors = ModelState
+                          .Where(x => x.Value.Errors.Count > 0)
+                          .ToDictionary(
+                          kvp => kvp.Key,
+                          kvp => kvp.Value.Errors.First().ErrorMessage);
+                return Json(new
+                {
+                    success = false,
+                    message = "Failed to update product",
+                    fieldErrors
+                });
+            }
+
+
+            var id = productEditView.Id;
+            var existingProduct = await _context.Product.FirstOrDefaultAsync(p => p.Id == id);
+            if (existingProduct == null)
             {
                 return NotFound();
             }
 
-            ModelState.Remove("ImageFile");
-
-            if (!ModelState.IsValid)
+            var haveSameName = await _context.Product.FirstOrDefaultAsync(p => p.Id != id && p.Name == productEditView.Name);
+            if (haveSameName != null)
             {
-                TempData["Error"] = "Validation failed. Please check your inputs.";
-                ViewBag.Categories = new SelectList(await _context.Category.ToListAsync(), "ID", "Name", product.CategoryId);
-                return View(product);
+                return Json(new
+                {
+                    success = false,
+                    message = "This name already exist"
+                });
             }
 
-            try
+            if (ImageFile != null && ImageFile.Length > 0)
             {
-                var existingProduct = await _context.Product.FindAsync(id);
-                if (existingProduct == null)
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/assets/images/products");
+                Directory.CreateDirectory(uploadsFolder);
+
+                var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(ImageFile.FileName);
+                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
                 {
-                    return NotFound();
+                    await ImageFile.CopyToAsync(stream);
                 }
 
-                if (ImageFile != null && ImageFile.Length > 0)
-                {
-                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/assets/images/products");
-                    Directory.CreateDirectory(uploadsFolder);
-
-                    var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(ImageFile.FileName);
-                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await ImageFile.CopyToAsync(stream);
-                    }
-
-                    existingProduct.Image = "/assets/images/products/" + uniqueFileName;
-                }
-
-                existingProduct.Name = product.Name;
-                existingProduct.Description = product.Description;
-                //existingProduct.Price = product.Price;
-                existingProduct.InStock = product.InStock;
-                existingProduct.IsAvailable = product.IsAvailable;
-                existingProduct.CategoryId = product.CategoryId;
-
-                _context.Update(existingProduct);
-                await _context.SaveChangesAsync();
-
-                TempData["Success"] = "Product has been updated!";
-                return RedirectToAction(nameof(Index));
+                existingProduct.Image = "/assets/images/products/" + uniqueFileName;
             }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!_context.Product.Any(e => e.Id == product.Id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-        }
 
-
-
-
-
-
-
-
-
-
-
-
-        // GET: Products/Delete/5
-        //public async Task<IActionResult> Delete(int? id)
-        //{
-        //    if (id == null)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    var product = await _context.Product
-        //        .FirstOrDefaultAsync(m => m.ID == id);
-        //    if (product == null)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    return View(product);
-        //}
-        public async Task<IActionResult> Delete(int? id)
-        {
-            var product = await _context.Product.FindAsync(id);
-            if (product != null)
-            {
-                _context.Product.Remove(product);
-            }
+            existingProduct.IsAvailable = productEditView.IsAvailable;
+            existingProduct.Name = productEditView.Name;
+            existingProduct.Description = productEditView.Description;
+            existingProduct.Discount = productEditView.Discount;
+            existingProduct.CategoryId = productEditView.CategoryId;
 
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+
+            return Json(new
+            {
+                success = true,
+                message = "Update Successfully!"
+            });
+
 
         }
 
-        // POST: Products/Delete/5
-        //[HttpPost, ActionName("Delete")]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> DeleteConfirmed(int id)
-        //{
-        //    var product = await _context.Product.FindAsync(id);
-        //    if (product != null)
-        //    {
-        //        _context.Product.Remove(product);
-        //    }
 
-        //    await _context.SaveChangesAsync();
-        //    return RedirectToAction(nameof(Index));
-        //}
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        [HttpPut]
+        public async Task<IActionResult> ChangeProductStatus([FromBody] ChangeProductStatusViewModel changeProductStatus)
         {
-            var product = await _context.Product.FindAsync(id);
-
+            var id = changeProductStatus.Id;
+            var isDelete = changeProductStatus.isDelete;
+            Product product = await _context.Product.FindAsync(id);
+            var text = isDelete ? "delete" : "restore";
             if (product == null)
             {
-                return Json(new { success = false, message = "Product not found!" });
+
+                return Json(new
+                {
+                    success = false,
+                    message = $"Failed to {text}"
+                });
             }
 
-            _context.Product.Remove(product);
+            product.IsAvailable = !isDelete;
             await _context.SaveChangesAsync();
+            return Json(new
+            {
+                success = true,
+                message = $"{text} successfully"
+            });
 
-            return Json(new { success = true, id = id });
-        }
-
-
-        private bool ProductExists(int id)
-        {
-            return _context.Product.Any(e => e.Id == id);
         }
     }
 }

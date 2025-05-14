@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Identity;
 
 namespace Cosmetic.Models
 {
@@ -9,10 +10,6 @@ namespace Cosmetic.Models
         public long Id { get; set; }
 
         public string Name { get; set; }
-
-        public string Email { get; set; }
-
-        public string Password { get; set; }
 
         public string? Address { get; set; }
 
@@ -27,25 +24,20 @@ namespace Cosmetic.Models
         public bool Gender { get; set; }
         public bool IsActive { get; set; }
 
-        public List<string> Roles { get; set; }
+        public string UserId { get; set; }
 
-        public long UserId { get; set; }
-
-        public User User { get; set; }
+        public IdentityUser User { get; set; }
 
         public Admin() { }
 
-        public Admin(string name, string email, string password, string? address, string phoneNumber, DateTime dateOfBirth, bool gender, bool isActive, long userId, User user)
+        public Admin(string name, string? address, string phoneNumber, DateTime dateOfBirth, bool gender, bool isActive, string userId,IdentityUser user)
         {
             Name = name;
-            Email = email;
-            Password = password;
             Address = address;
             PhoneNumber = phoneNumber;
             DateOfBirth = dateOfBirth;
             Gender = gender;
             IsActive = isActive;
-            this.Roles = new List<string> { "Admin" };
             UserId = userId;
             User = user;
         }

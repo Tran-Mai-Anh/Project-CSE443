@@ -10,8 +10,6 @@ namespace Cosmetic.Models
         [Key]
         public long Id { get; set; }
         public string Name { get; set; }
-        public string Email { get; set; }
-        public string Password { get; set; }
         public string? Address { get; set; }
 
         public string PhoneNumber { get; set; }
@@ -29,13 +27,11 @@ namespace Cosmetic.Models
         [Column(TypeName = "date")]
         public DateTime StartDate { get; set; }
 
-        public List<string> Roles { get; set; }
-
         public Cart Cart { get; set; }
 
-        public long UserId { get; set; }
+        public string UserId { get; set; }
 
-        public User User { get; set; }
+        public IdentityUser User { get; set; }
 
         public List<Order> Orders { get; set; }
 
@@ -46,11 +42,9 @@ namespace Cosmetic.Models
 
         public Customer() { }
 
-        public Customer(string name, string email, string password, string? address, string phoneNumber, DateTime dateOfBirth, bool gender, long userId, User user, long rankId, Rank rank)
+        public Customer(string name, string? address, string phoneNumber, DateTime dateOfBirth, bool gender, string userId, IdentityUser user, long rankId, Rank rank)
         {
             this.Name = name;
-            this.Email = email;
-            this.Password = password;
             this.Address = address;
             this.PhoneNumber = phoneNumber;
             this.DateOfBirth = dateOfBirth;
@@ -58,7 +52,6 @@ namespace Cosmetic.Models
             this.IsActive = true;
             this.LoyalPoints = 0.0;
             this.StartDate = DateTime.Today;
-            this.Roles = new List<string> { "Customer" };
             this.UserId = userId;
             this.User = user;
             this.Orders = new List<Order>();

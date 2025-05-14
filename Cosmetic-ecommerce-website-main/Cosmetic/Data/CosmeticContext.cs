@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Cosmetic.Data
 {
-    public class CosmeticContext : DbContext
+    public class CosmeticContext : IdentityDbContext<IdentityUser>
     {
         public CosmeticContext(DbContextOptions<CosmeticContext> options) : base(options)
         {
@@ -19,6 +19,8 @@ namespace Cosmetic.Data
         {
 
             modelBuilder.Entity<Rank>().HasData(new Rank(1, "NONE", 0.0, 0), new Rank(2, "SILVER", 2.0, 2000), new Rank(3, "GOLD", 5.0, 5000), new Rank(4, "PLATINUM", 7.0, 7000));
+
+
 
             modelBuilder.Entity<Product>()
                         .Property(p => p.ProductType)
@@ -57,8 +59,8 @@ namespace Cosmetic.Data
 
             modelBuilder.Entity<Customer>()
                 .HasOne(eachCustomer => eachCustomer.User)
-                .WithOne(eachUser => eachUser.Customer)
-                .HasForeignKey<Customer>(eachCustomer => eachCustomer.UserId);
+                .WithMany()
+                .HasForeignKey(c => c.UserId);
 
             modelBuilder.Entity<Customer>()
                 .HasOne(eachCustomer => eachCustomer.Rank)
@@ -68,8 +70,8 @@ namespace Cosmetic.Data
 
             modelBuilder.Entity<Admin>()
                 .HasOne(eachAdmin => eachAdmin.User)
-                .WithOne(eachUser => eachUser.Admin)
-                .HasForeignKey<Admin>(eachAdmin => eachAdmin.UserId);
+                .WithMany()
+                .HasForeignKey(a => a.UserId);
 
             modelBuilder.Entity<Product>()
                 .HasOne(eachProduct => eachProduct.Category)
@@ -86,18 +88,18 @@ namespace Cosmetic.Data
                 .WithMany(eachCustomer => eachCustomer.AddressShippings)
                 .HasForeignKey(eachAddressShipping => eachAddressShipping.CustomerId);
 
-            SeedData.UpdateProductTypeAndVariants(modelBuilder);
+            //SeedData.UpdateProductTypeAndVariants(modelBuilder);
             base.OnModelCreating(modelBuilder);
         }
 
         public DbSet<Category> Category { get; set; }
         public DbSet<Product> Product { get; set; }
+
+        public DbSet<ProductVariant> ProductVariant { get; set; }
         public DbSet<Order> Order { get; set; }
         public DbSet<Customer> Customer { get; set; }
 
         public DbSet<Rank> Rank { get; set; }
-
-        public DbSet<User> User { get; set; }
 
         public DbSet<Admin> Admin { get; set; }
 

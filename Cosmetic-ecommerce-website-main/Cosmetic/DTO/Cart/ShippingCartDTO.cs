@@ -11,6 +11,8 @@ namespace Cosmetic.DTO.Cart
 
         public AddressShipping AddressShipping { get; set; }
 
+        public double RankDiscount { get; set; }
+
         public ShippingCartDTO() { }
 
         public ShippingCartDTO(long id, List<ShippingCartItemDTO> cartItems, AddressShipping addressShipping)

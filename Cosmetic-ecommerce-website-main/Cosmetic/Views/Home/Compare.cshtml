@@ -6,6 +6,9 @@
     {
         relatedProducts = new List<Cosmetic.Models.Product>();
     }
+
+    var userEmail = ViewBag.UserEmail as string;
+    ViewData["Title"] = "Compare Products";
 }
 
 <main id="content" class="wrapper layout-page">
@@ -24,9 +27,28 @@
                             <p class="fs-18px text-center mt-4 mb-6 text-body-emphasis fw-semibold">
                                 @selectedProduct?.Name
                             </p>
-                            <a href="@Url.Action("ProductDetail", "Home", new { id = selectedProduct?.Id })" class="text-center d-block">
-                                <img src="@Url.Content(selectedProduct?.Image)" class="lazy-image" alt="@selectedProduct?.Name" style="max-width: 210px" width="210" height="280">
+
+
+                            <a asp-controller="Home" asp-action="ProductDetail" asp-route-id="@selectedProduct.Id" class="text-center d-block">
+                                <div class="productContainerMainCompare">
+                                    <div class="containerWrapProductCompare">
+                                        <img src="@Url.Content(selectedProduct.Image)" class="lazy-image" alt="@selectedProduct.Name" style="max-width: 210px" width="210" height="280">
+                                        <div class="badgeProductVariantName__Compare">
+                                            <span class="badge bg-light text-dark fs-12px px-4 py-4" title="@selectedProduct.ProductVariants[0].Name">
+                                                @selectedProduct.ProductVariants[0].Name
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
                             </a>
+
+
+
+
+
+
+
                         </th>
 
                         @foreach (var product in relatedProducts)
@@ -35,9 +57,26 @@
                                 <p class="fs-18px text-center mt-4 mb-6 text-body-emphasis fw-semibold">
                                     @product.Name
                                 </p>
-                                <a href="@Url.Action("ProductDetail", "Home", new { id = product.Id })" class="text-center d-block">
-                                    <img src="@Url.Content(product.Image)" class="lazy-image" alt="@product.Name" style="max-width: 210px" width="210" height="280">
+
+
+                                <a asp-controller="Home" asp-action="ProductDetail" asp-route-id="@product.Id" class="text-center d-block">
+
+                                    <div class="productContainerMainCompare">
+                                        <div class="containerWrapProductCompare">
+                                            <img src="@Url.Content(product.Image)" class="lazy-image" alt="@product.Name" style="max-width: 210px" width="210" height="280">
+                                            <div class="badgeProductVariantName__Compare">
+                                                <span class="badge bg-light text-dark fs-12px px-4 py-4" title="@product.ProductVariants[0].Name">
+                                                    @product.ProductVariants[0].Name
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+
                                 </a>
+
+
+
                             </th>
                         }
                     </tr>
@@ -49,24 +88,37 @@
                             <span class="fs-6 text-body-emphasis fw-500">Price</span>
                         </th>
                         <td scope="col" class="px-6 px-lg-9 align-middle">
-                            <span class="fs-15px fw-500 text-decoration-line-through text-body">
-                                $@selectedProduct.ProductVariants[0].Price
-                            </span>
+                            @if (selectedProduct.Discount != 0)
+                            {
+                                <span class="fs-15px fw-500 text-decoration-line-through text-body">
+                                    $@selectedProduct.ProductVariants[0].Price.ToString("F2")
+                                </span>
+                            }
                             <span class="pe-3 fs-18px font-weight-bold text-body-emphasis">
-                                $@((selectedProduct.ProductVariants[0].Price) * 0.75)
+                                $@(((selectedProduct.ProductVariants[0].Price) * ((100 - selectedProduct.Discount) / 100)).ToString("F2"))
                             </span>
-                            <span class="badge bg-primary ms-4 fs-6">-25%</span>
+                            @if (selectedProduct.Discount != 0)
+                            {
+                                <span class="badge bg-primary ms-4 fs-6">-@selectedProduct.Discount%</span>
+                            }
+
                         </td>
                         @foreach (var product in relatedProducts)
                         {
                             <td scope="col" class="px-6 px-lg-9 align-middle">
-                                <span class="fs-15px fw-500 text-decoration-line-through text-body">
-                                    $@product.ProductVariants[0].Price
-                                </span>
+                                @if (product.Discount != 0)
+                                {
+                                    <span class="fs-15px fw-500 text-decoration-line-through text-body">
+                                        $@product.ProductVariants[0].Price.ToString("F2")
+                                    </span>
+                                }
                                 <span class="pe-3 fs-18px font-weight-bold text-body-emphasis">
-                                    $@((product.ProductVariants[0].Price) * 0.75)
+                                    $@(((product.ProductVariants[0].Price) * ((100 - product.Discount) / 100)).ToString("F2"))
                                 </span>
-                                <span class="badge bg-primary ms-4 fs-6">-25%</span>
+                                @if (product.Discount != 0)
+                                {
+                                    <span class="badge bg-primary ms-4 fs-6">-@product.Discount%</span>
+                                }
                             </td>
                         }
                     </tr>
@@ -87,15 +139,39 @@
                             </td>
                         }
                     </tr>
-                    @* <tr> *@
-                    @*     <th scope="col" class="bg-body-tertiary">Add to Cart</th> <!-- Tiêu đề cho cột nút Add to Cart --> *@
-                    @*     @foreach (var product in relatedProducts) *@
-                    @*     { *@
-                    @*         <td class="px-6 text-center align-middle py-7"> *@
-                    @*             <a href="@Url.Action("AddToCart", "Cart", new { id = product.ID })" class="btn btn-dark btn-hover-bg-primary border-0 py-4">Add To Cart</a> *@
-                    @*         </td> *@
-                    @*     } *@
-                    @* </tr> *@
+                    <tr>
+
+                        <th scope="col" class="text-center align-middle bg-body-tertiary p-5">Add to Cart</th>
+                        @if (!string.IsNullOrEmpty(userEmail))
+                        {
+                            <td class="px-6 text-center align-middle py-7">
+                                <a href="javascript:;" onclick="addToCart(@selectedProduct.Id)" class="btn btn-dark btn-hover-bg-primary border-0 py-4">Add To Cart</a>
+                            </td>
+                        }
+                        else
+                        {
+
+                            <td class="px-6 text-center align-middle py-7">
+                                <a data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Add To Cart" onclick="showLoginPopup('HomeIndex')" class="btn btn-dark btn-hover-bg-primary border-0 py-4">Add To Cart</a>
+                            </td>
+                        }
+                        @foreach (var product in relatedProducts)
+                        {
+                            @if (!string.IsNullOrEmpty(userEmail))
+                            {
+                                <td class="px-6 text-center align-middle py-7">
+                                    <a href="javascript:;" onclick="addToCart(@product.Id)" class="btn btn-dark btn-hover-bg-primary border-0 py-4">Add To Cart</a>
+                                </td>
+                            }
+                            else
+                            {
+
+                                <td class="px-6 text-center align-middle py-7">
+                                    <a data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Add To Cart" onclick="showLoginPopup('HomeIndex')" class="btn btn-dark btn-hover-bg-primary border-0 py-4">Add To Cart</a>
+                                </td>
+                            }
+                        }
+                    </tr>
                 </tbody>
             </table>
         </div>

@@ -8,6 +8,8 @@ namespace Cosmetic.Models
         [Key]
         public long Id { get; set; }
 
+        public string Name { get; set; }
+
         public string Province { get; set; }
 
         public string District { get; set; }
@@ -26,7 +28,7 @@ namespace Cosmetic.Models
 
         public double LoyalPointEarned { get; set; }
 
-        public string Address { get; set; }
+        public string SpecificPlace { get; set; }
 
         public string PhoneNumber { get; set; }
 
@@ -44,7 +46,7 @@ namespace Cosmetic.Models
 
         public Order() { }
 
-        public Order(string province, string district, string ward, double finalPrice, double totalPrice, double totalDiscount, double productDiscount, double rankDiscount, double loyalPointEarned, string address, string phoneNumber, string? note, long customerId, Customer customer)
+        public Order(string province, string district, string ward, double finalPrice, double totalPrice, double totalDiscount, double productDiscount, double rankDiscount, double loyalPointEarned, string specificPlace, string phoneNumber, string? note, long customerId, Customer customer)
         {
             Province = province;
             District = district;
@@ -55,7 +57,7 @@ namespace Cosmetic.Models
             ProductDiscount = productDiscount;
             RankDiscount = rankDiscount;
             LoyalPointEarned = loyalPointEarned;
-            Address = address;
+            SpecificPlace = specificPlace;
             PhoneNumber = phoneNumber;
             Note = note;
             OrderStatus = "PENDING";
