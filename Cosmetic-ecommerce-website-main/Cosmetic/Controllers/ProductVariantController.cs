@@ -93,5 +93,83 @@ namespace Cosmetic.Controllers
                 fieldErrors
             });
         }
+
+        public async Task<IActionResult> CreateProductVariant()
+        {
+            List<Product> products = await _context.Product.ToListAsync();
+
+            return View(new ProductVariantCreateViewModel
+            {
+                Products = products
+            });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateProductVariant(ProductVariantCreateViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                Product product = await _context.Product.Include(p => p.ProductVariants).FirstOrDefaultAsync(p => p.Id == model.ProductId);
+
+                List<ProductVariant> productVariants = product.ProductVariants;
+
+                var customFieldErrors = new Dictionary<string, string>();
+                if (product.ProductType.ToString() == "VolumeBased")
+                {
+                    model.Name = model.Name + "ml";
+                }
+                else if (product.ProductType.ToString() == "WeightBased")
+                {
+                    model.Name = model.Name + "g";
+                }
+
+                foreach (ProductVariant eachProductVariant in productVariants)
+                {
+                    if (eachProductVariant.Name == model.Name)
+                    {
+                        customFieldErrors["Name"] = "This name already exist";
+
+                        return Json(new
+                        {
+                            success = false,
+                            message = "Failed to create product variant",
+                            fieldErrors = customFieldErrors
+                        });
+                    }
+                }
+
+
+
+                ProductVariant productVariant = new ProductVariant
+                {
+                    Name = model.Name,
+                    InStock = model.InStock,
+                    Product = product,
+                    Price = model.Price,
+                    ProductId = model.ProductId,
+                };
+
+                _context.ProductVariant.Add(productVariant);
+                await _context.SaveChangesAsync();
+
+                return Json(new
+                {
+                    success = true,
+                    message = "Create successfully!!"
+                });
+            }
+            var fieldErrors = ModelState
+                           .Where(x => x.Value.Errors.Count > 0)
+                           .ToDictionary(
+                           kvp => kvp.Key,
+                           kvp => kvp.Value.Errors.First().ErrorMessage
+           );
+            return Json(new
+            {
+                success = false,
+                message = "Failed to create product variant",
+                fieldErrors
+            });
+        }
     }
 }

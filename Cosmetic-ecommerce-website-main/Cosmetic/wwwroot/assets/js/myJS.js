@@ -205,7 +205,7 @@ function updatePriceInProductDetail(discount) {
 
 
 
-function submitFormData(formId,method) {
+function submitFormData(formId, method) {
     var form = document.getElementById(formId);
 
     var formData = $(form).serialize();
@@ -222,16 +222,12 @@ function submitFormData(formId,method) {
 
             } else {
 
-
-
                 if (response.fieldErrors) {
                     for (var field in response.fieldErrors) {
                         var errorMessage = response.fieldErrors[field];
                         $("[data-valmsg-for='" + field + "']").text(errorMessage);
                     }
-                } else {
-                    alert('Đã xảy ra lỗi, vui lòng thử lại.');
-                }
+                } 
             }
         },
         error: function (xhr, status, error) {
@@ -242,7 +238,7 @@ function submitFormData(formId,method) {
 
 function submitFormDataWithFile(formId, method) {
     var form = document.getElementById(formId);
-    var formData = new FormData(form); 
+    var formData = new FormData(form);
 
     var actionUrl = form.getAttribute('action');
 
@@ -251,13 +247,13 @@ function submitFormDataWithFile(formId, method) {
         type: method,
         data: formData,
         contentType: false,
-        processData: false, 
+        processData: false,
         success: function (response) {
-            $(".field-error").text(''); 
+            $(".field-error").text('');
 
             if (response.success) {
-                showMessage(response.message); 
-                
+                showMessage(response.message);
+
             } else {
                 if (response.fieldErrors) {
                     console.log(response.fieldErrors);
@@ -366,7 +362,7 @@ async function handleCheckOut() {
         const productSize = checkbox.getAttribute("onchange").match(/'([^']+)'/)[1];
         return { id: parseInt(id), productSize };
     });
-   
+
     const finalPrice = parseFloat(document.getElementById("finalPriceFromAllCartItems").innerText.replace("$", ""));
     const totalPrice = parseFloat(document.getElementById("totalPriceFromAllCartItems")?.innerText.replace("$", "") || finalPrice);
     const discountPrice = parseFloat(document.getElementById("discountPriceFromAllCartItems").innerText.replace("$", ""));
@@ -851,7 +847,7 @@ function submitEditCategoryForm(formId) {
     });
 }
 
-function changeStatusProduct(id,isDelete,modalId) {
+function changeStatusProduct(id, isDelete, modalId) {
     $.ajax({
         url: `/Products/ChangeProductStatus`,
         type: 'PUT',
@@ -928,4 +924,72 @@ function submitEditProductVariantForm(formId) {
             console.error("AJAX Error in Submit Data ", error);
         }
     });
+}
+
+function SelectProductOnChange() {
+    const select = document.getElementById('selectProduct');
+    const selectedOption = select.options[select.selectedIndex];
+
+    const productId = selectedOption.value;
+    const productType = selectedOption.dataset.type;
+
+    const inputProductIdElement = document.getElementById('inputProductId');
+    const inputProductTypeElement = document.getElementById('inputProductType');
+
+    inputProductIdElement.value = productId;
+    inputProductTypeElement.value = productType;
+
+
+    inputProductIdElement.innerText = productId;
+    inputProductTypeElement.innerText = productType;
+
+    const storeProductVariantNameElement = document.getElementById('storeProductVariantName');
+    storeProductVariantNameElement.innerHTML = '';
+
+
+
+    const inputElement = document.createElement('input');
+    const labelProductVariantNameElement = document.getElementById('labelProductVariantName');
+    inputElement.className = 'form-control';
+    inputElement.placeholder = 'Product Variant Name';
+    inputElement.id = 'inputProductVariantName';
+    inputElement.name = "Name";
+
+
+    if (productType == "VolumeBased") {
+        labelProductVariantNameElement.innerText = 'Name ( ml )';
+        storeProductVariantNameElement.appendChild(inputElement);
+        inputElement.type = 'number';
+    } else if (productType == "WeightBased") {
+        labelProductVariantNameElement.innerText = 'Name ( g )';
+        storeProductVariantNameElement.appendChild(inputElement);
+        inputElement.type = 'number';
+    } else if (productType == 'SizeBased') {
+        labelProductVariantNameElement.innerText = 'Name ( S, M, L )';
+        const selectElement = document.createElement('select');
+        selectElement.name = 'Name';
+        selectElement.className = 'form-select';
+        selectElement.id = 'inputProductVariantName';
+
+        ['Small', 'Medium', 'Large'].forEach(size => {
+            const option = document.createElement('option');
+            option.value = size;
+            option.text = size;
+            selectElement.appendChild(option);
+        });
+
+        storeProductVariantNameElement.appendChild(selectElement);
+    } else {
+        labelProductVariantNameElement.innerText = 'Name ( Standard )';
+        inputElement.value = 'Standard';
+        inputElement.readOnly = true;
+
+        storeProductVariantNameElement.appendChild(inputElement);
+    }
+
+    const validationSpan = document.createElement('span');
+    validationSpan.className = 'text-danger field-error';
+    validationSpan.setAttribute('data-valmsg-for', 'Name');
+    validationSpan.setAttribute('data-valmsg-replace', 'true');
+    storeProductVariantNameElement.appendChild(validationSpan);
 }

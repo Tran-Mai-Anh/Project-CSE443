@@ -40,10 +40,6 @@ namespace Cosmetic.Controllers
 
         public async Task<IActionResult> Details(long id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
 
             var category = await _context.Category
                 .FirstOrDefaultAsync(m => m.Id == id);

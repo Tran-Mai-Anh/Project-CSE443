@@ -112,8 +112,8 @@ namespace Cosmetic.Controllers
                     return View(registerViewModel);
                 }
 
-                var user = new IdentityUser { Email = email,UserName = email};
-                var result = await _userManager.CreateAsync(user,password);
+                var user = new IdentityUser { Email = email, UserName = email };
+                var result = await _userManager.CreateAsync(user, password);
 
                 if (result.Succeeded)
                 {
@@ -132,7 +132,7 @@ namespace Cosmetic.Controllers
                         Rank = rank,
                         RankId = rank.Id,
                         StartDate = DateTime.Now,
-                        
+
                     };
                     _context.Customer.Add(customer);
                     await _context.SaveChangesAsync();
@@ -183,21 +183,20 @@ namespace Cosmetic.Controllers
 
                 var user = await _userManager.FindByEmailAsync(email);
 
-                if(user == null)
+                if (user == null)
                 {
                     ModelState.AddModelError("", "Email does not exist");
                     return View(loginViewModel);
                 }
 
-                var isMatchPassword = await _signInManager.PasswordSignInAsync(user,password,false,false);
+                var result = await _signInManager.PasswordSignInAsync(user, password, rememberMe, false);
 
-                if (!isMatchPassword.Succeeded)
+                if (!result.Succeeded)
                 {
                     ModelState.AddModelError("", "Password is not correct");
                     return View(loginViewModel);
                 }
 
-                await _signInManager.SignInAsync(user, isPersistent: rememberMe);
                 TempData["LoginSuccess"] = "Successful";
                 if (!string.IsNullOrEmpty(returnURL))
                 {
@@ -237,7 +236,7 @@ namespace Cosmetic.Controllers
                 }
             }
 
-            var productList = await _context.Product.Where(p =>  p.IsAvailable && p.InStock>0 && p.ProductVariants.Any(pv => pv.InStock > 0)).Include(p => p.ProductVariants).Include(p => p.Category).ToListAsync();
+            var productList = await _context.Product.Where(p => p.IsAvailable && p.InStock > 0 && p.ProductVariants.Any(pv => pv.InStock > 0)).Include(p => p.ProductVariants).Include(p => p.Category).ToListAsync();
 
             if (filter.CategoryId.HasValue)
             {
@@ -248,7 +247,7 @@ namespace Cosmetic.Controllers
             {
 
                 productList = productList.Where(p => p.ProductVariants.Any(pv => pv.Price >= filter.MinPrice && pv.Price <= filter.MaxPrice)).ToList();
-                foreach(var eachProduct in productList)
+                foreach (var eachProduct in productList)
                 {
                     eachProduct.ProductVariants = eachProduct.ProductVariants.Where(pv => pv.InStock > 0 && pv.Price >= filter.MinPrice && pv.Price <= filter.MaxPrice).ToList();
                 }
@@ -307,7 +306,7 @@ namespace Cosmetic.Controllers
         }
 
         //Done
-        [Authorize(Roles ="CUSTOMER")]
+        [Authorize(Roles = "CUSTOMER")]
         public async Task<IActionResult> ShoppingCart(long cartId)
         {
 
@@ -421,5 +420,5 @@ namespace Cosmetic.Controllers
         }
     }
 
- 
+
 }
