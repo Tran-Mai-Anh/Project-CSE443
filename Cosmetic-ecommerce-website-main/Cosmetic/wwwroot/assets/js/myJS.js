@@ -75,6 +75,8 @@ function addToCart(productId) {
                 });
 
                 showMessage(data.message);
+            } else {
+                showWarning(data.message);
             }
         },
         error: function (xhr, status, error) {

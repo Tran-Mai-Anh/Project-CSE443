@@ -75,7 +75,8 @@
                                             @if (!string.IsNullOrEmpty(userEmail))
                                             {
                                                 <a class="text-body-emphasis bg-body bg-dark-hover text-light-hover rounded-circle square product-action shadow-sm add_to_cart"
-                                                   href="#" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Add To Cart">
+                                                   href="javascript:;" onclick="addToCart(@product.Id)"
+                                                   data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Add To Cart">
                                                     <i class="icon fs-6 icon-shopping-bag-open-light fa-solid fa-cart-shopping"></i>
                                                 </a>
                                             }

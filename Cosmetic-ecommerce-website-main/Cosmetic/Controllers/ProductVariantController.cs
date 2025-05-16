@@ -149,6 +149,8 @@ namespace Cosmetic.Controllers
                     ProductId = model.ProductId,
                 };
 
+                product.InStock += productVariant.InStock;
+
                 _context.ProductVariant.Add(productVariant);
                 await _context.SaveChangesAsync();
 

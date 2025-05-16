@@ -12,6 +12,7 @@
         roles = await UserManager.GetRolesAsync(user);
     }
 
+    bool isAdmin = roles.Contains("ADMIN");
 }﻿
 
 <!doctype html>
@@ -167,7 +168,7 @@
 
                             }
                         </div>
-                        @if (!string.IsNullOrEmpty(userEmail) && roles.Contains("CUSTOMER"))
+                        @if (!string.IsNullOrEmpty(userEmail) && !isAdmin)
                         {
                             <div id="miniCartContainer">
                                 @await Component.InvokeAsync("MiniCart")
@@ -336,12 +337,14 @@
     <script>
         const loginSuccess = '@TempData["LoginSuccess"]';
         const userEmail = '@userEmail';
+        const isAdmin = @isAdmin.ToString().ToLower();
+
 
         if (loginSuccess) {
             showMessage("Hello " + userEmail);
         }
 
-        if(userEmail){
+        if(userEmail && !isAdmin){
                 $(document).ready(function () {
             $.ajax({
                 url: '/Carts/ReloadMiniCart',

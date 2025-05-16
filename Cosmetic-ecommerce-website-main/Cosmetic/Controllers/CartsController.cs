@@ -32,7 +32,7 @@ namespace Cosmetic.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles ="CUSTOMER")]
+        [Authorize]
         public async Task<IActionResult> AddProductToCart(long productId, string? productSize, int quantity)
         {
             var identityUser = await _userManager.GetUserAsync(User);
@@ -40,6 +40,20 @@ namespace Cosmetic.Controllers
             {
                 return NotFound();
             }
+
+            var roles = await _userManager.GetRolesAsync(identityUser);
+            if (roles.Contains("ADMIN"))
+            {
+                Console.WriteLine("heheheheheheh");
+                return Json(new
+                {
+                    success = false,
+                    message = "Admin can not add product to cart"
+                });
+            }
+
+            Console.WriteLine("??????????????");
+
             Customer customer = await _context.Customer.Include(eachCustomer => eachCustomer.Cart).ThenInclude(eachCart => eachCart.CartItems).FirstOrDefaultAsync(eachCustomer => eachCustomer.UserId == identityUser.Id);
 
             Product product = await _context.Product.Include(eachProduct => eachProduct.ProductVariants.Where(pv => pv.InStock > 0)).FirstOrDefaultAsync(eachProduct => eachProduct.Id == productId);
