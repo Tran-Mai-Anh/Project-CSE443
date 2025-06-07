@@ -185,7 +185,7 @@ namespace Cosmetic.Controllers
 
                 if (user == null)
                 {
-                    ModelState.AddModelError("", "Email does not exist");
+                    ModelState.AddModelError("", "Wrong Email or Password");
                     return View(loginViewModel);
                 }
 
@@ -193,7 +193,7 @@ namespace Cosmetic.Controllers
 
                 if (!result.Succeeded)
                 {
-                    ModelState.AddModelError("", "Password is not correct");
+                    ModelState.AddModelError("", "Wrong Email or Password");
                     return View(loginViewModel);
                 }
 
@@ -402,7 +402,7 @@ namespace Cosmetic.Controllers
             var relatedProducts = await _context.Product
                                           .Where(p => p.CategoryId == selectedProduct.CategoryId && p.Id != selectedProduct.Id && p.ProductVariants.Any(pv => pv.InStock > 0))
                                           .Include(p => p.ProductVariants.Where(pv => pv.InStock > 0))
-                                          .OrderBy(r => Guid.NewGuid())
+                                          .OrderBy( p => p.Id)
                                           .Take(3)
                                           .ToListAsync();
 

@@ -17,7 +17,8 @@ namespace Cosmetic.Controllers
         {
             _context = context;
         }
-        // GET: Admin
+
+
         public async Task<IActionResult> Index(string status = "All", DateTime? startDate = null, DateTime? endDate = null, int page = 1)
         {
             var orderQuery = _context.Order.AsQueryable();

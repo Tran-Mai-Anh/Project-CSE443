@@ -130,13 +130,6 @@
         }
 
     </div>
-
-
-    <div class="text-center mt-4">
-        <button id="loadMoreBtn" class="load-more-btn__myOrder">
-            <i class="fas fa-sync-alt me-4"></i>Load More Orders
-        </button>
-    </div>
 }
 else
 {
@@ -241,32 +234,9 @@ else
             }
         });
 
-        // LOAD MORE
+      
         const orders = document.querySelectorAll(".order-card__myOrder");
-        const loadMoreBtn = document.getElementById("loadMoreBtn");
-
-
-        let ordersPerPage = 5;
-        let currentIndex = 0;
-
-        function showNextOrders() {
-            for (let i = currentIndex; i < currentIndex + ordersPerPage && i < orders.length; i++) {
-                orders[i].style.display = "block";
-            }
-            currentIndex += ordersPerPage;
-
-            if (currentIndex >= orders.length) {
-                loadMoreBtn.style.display = "none";
-            }
-        }
-
-        orders.forEach(order => order.style.display = "none");
-        showNextOrders();
-
-        loadMoreBtn.addEventListener("click", showNextOrders);
-
-
-        // DEBOUNCE SEARCH for Id and Status
+      
 
         const orderSearchInput = document.getElementById("orderSearch");
         const statusFilterSelect = document.getElementById("statusFilter");

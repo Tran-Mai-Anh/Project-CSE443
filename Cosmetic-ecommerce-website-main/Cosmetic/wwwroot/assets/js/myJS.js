@@ -899,6 +899,56 @@ function changeStatusProduct(id, isDelete, modalId) {
     });
 }
 
+function changeCustomerActive(id, isDelete, modalId) {
+    $.ajax({
+        url: `/Customer/ChangeCustomerActive`,
+        type: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            Id: id,
+            isDelete: isDelete
+        }),
+        success: function (response) {
+            if (response.success) {
+
+                showMessage(response.message);
+
+                const spanStatus = document.getElementById(`customerActiveClass-${id}`);
+                if (spanStatus) {
+                    spanStatus.className = `badge rounded-lg rounded-pill alert py-3 px-4 mb-0 border-0 text-capitalize fs-12 ${isDelete ? "alert-danger" : "alert-success"}`
+                    spanStatus.textContent = `${isDelete ? "InActive" : "Active"}`
+                }
+
+                const btnToggle = document.getElementById(`btnToggleCustomerStatus-${id}`);
+
+                if (btnToggle) {
+                    btnToggle.innerHTML = !isDelete
+                        ? `<i class="far fa-trash me-2"></i> Delete`
+                        : `<i class="fas fa-undo me-2"></i> Restore`;
+
+                    btnToggle.className = "btn btn-hover-text-light py-4 px-5 fs-13px btn-xs me-4";
+
+                    if (!isDelete) {
+                        btnToggle.classList.add("btn-outline-primary", "btn-hover-bg-danger", "btn-hover-border-danger");
+                    } else {
+                        btnToggle.classList.add("btn-outline-success", "btn-hover-bg-success", "btn-hover-border-success");
+                    }
+
+                    btnToggle.setAttribute("onclick", !isDelete
+                        ? `confirmDelete(${id});`
+                        : `confirmRestore(${id});`);
+                }
+                bootstrap.Modal.getInstance(document.getElementById(modalId)).hide();
+            } else {
+                showWarning(response.message);
+            }
+        },
+        error: function (xhr, status, error) {
+            console.error("AJAX Error in Submit Data ", error);
+        }
+    });
+}
+
 function submitEditProductVariantForm(formId) {
     var form = document.getElementById(formId);
 

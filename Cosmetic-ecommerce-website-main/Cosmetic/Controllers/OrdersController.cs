@@ -292,7 +292,7 @@ namespace Cosmetic.Controllers
                     Product product = eachOrderDetail.Product;
                     ProductVariant productVariant = product.ProductVariants.Find(pv => pv.Name == eachOrderDetail.ProductSize);
 
-                    if (productVariant.InStock <= 0 || eachOrderDetail.Quantity > productVariant.InStock)
+                    if (productVariant.InStock <= 0 || eachOrderDetail.Quantity > productVariant.InStock || !product.IsAvailable)
                     {
                         return Json(new
                         {

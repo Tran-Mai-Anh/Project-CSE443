@@ -10,6 +10,8 @@ namespace Cosmetic.Data
 
         public static async Task SeedRolesAndAdminAsync(IServiceProvider serviceProvider)
         {
+
+
             var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
             var userManager = serviceProvider.GetRequiredService<UserManager<IdentityUser>>();
 

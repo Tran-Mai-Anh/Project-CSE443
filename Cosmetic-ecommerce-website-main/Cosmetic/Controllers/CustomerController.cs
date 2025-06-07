@@ -17,6 +17,7 @@ namespace Cosmetic.Controllers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly int _pageSize = 10;
 
         public CustomerController(CosmeticContext context, UserManager<IdentityUser> userManager,
                              SignInManager<IdentityUser> signInManager,
@@ -25,6 +26,60 @@ namespace Cosmetic.Controllers
             _context = context; _userManager = userManager;
             _signInManager = signInManager;
             _roleManager = roleManager;
+        }
+
+        [Authorize(Roles ="ADMIN")]
+        public async Task<IActionResult> CustomerList(int page = 1)
+        {
+            var customers = await _context.Customer
+                                    .Include(c => c.User)
+                                    .OrderBy(c => c.Id)
+                                    .ToListAsync();
+
+            var totalProducts = customers.Count();
+            var totalPages = (int)Math.Ceiling(totalProducts / (double)_pageSize);
+
+            page = Math.Max(1, Math.Min(page, Math.Max(1, totalPages)));
+
+            var result = customers
+                .OrderBy(c => c.Id)
+                .Skip((page - 1) * _pageSize)
+                .Take(_pageSize)
+                .ToList();
+
+            return View(new DashboardCustomerViewModel
+            {
+                CurrentPage = page,
+                TotalPages = totalPages,
+                Customers = result
+            });
+        }
+
+        [Authorize(Roles = "ADMIN")]
+        [HttpPut]
+        public async Task<IActionResult> ChangeCustomerActive([FromBody] ChangeCustomerActiveViewModel model)
+        {
+            var id = model.Id;
+            var isDelete = model.isDelete;
+            var customer = await _context.Customer.FindAsync(id);
+            var text = isDelete ? "delete" : "restore";
+            if (customer == null)
+            {
+
+                return Json(new
+                {
+                    success = false,
+                    message = $"Failed to {text}"
+                });
+            }
+
+            customer.IsActive = !isDelete;
+            await _context.SaveChangesAsync();
+            return Json(new
+            {
+                success = true,
+                message = $"{text} successfully"
+            });
         }
 
 
